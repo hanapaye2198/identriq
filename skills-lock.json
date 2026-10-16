@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "code-review": {
+      "source": "o0o0o0admin/skills-repo_supercent-io-skills-template",
+      "sourceType": "github",
+      "skillPath": ".agent-skills/code-review/SKILL.md",
+      "computedHash": "abb3265fc072fc7ae3063603a368f09e79647937cb20188e4ba30613ae0fe2cf"
+    }
+  }
+}

@@ -53,3 +53,19 @@ test('wallet timeline mirrors track', function () {
     $this->getJson('/api/me/timeline', ['Authorization' => "Bearer {$token}"])
         ->assertOk()->assertJsonStructure(['timeline', 'notifications']);
 });
+
+test('qr svg renders for linked wallet', function () {
+    $this->seed(IdentriqSeeder::class);
+    $registrant = Registrant::whereHas('appointments')->first();
+    Cache::put("otp:{$registrant->mobile}", '123456', now()->addMinutes(5));
+    $token = $this->postJson('/api/mobile/link', ['mobile' => $registrant->mobile, 'otp' => '123456'])->json('token');
+
+    $this->getJson('/api/me/qr-svg', ['Authorization' => "Bearer {$token}"])
+        ->assertOk()->assertJsonStructure(['svg']);
+});
+
+test('mobile web routes load', function () {
+    foreach (['/m', '/m/wallet', '/m/verify'] as $url) {
+        $this->get($url)->assertOk();
+    }
+});

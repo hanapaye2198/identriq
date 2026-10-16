@@ -15,24 +15,67 @@ use Inertia\Response;
 
 class StaffController extends Controller
 {
+    private function getStats(?int $centerId = null): array
+    {
+        $todayStr = now()->toDateString();
+        $base = Appointment::query();
+        if ($centerId) {
+            $base->where('center_id', $centerId);
+        }
+
+        return [
+            'today_count' => (clone $base)->whereDate('slot_at', $todayStr)->whereIn('status', ['booked', 'checked-in'])->count(),
+            'checked_in_count' => (clone $base)->where('status', 'checked-in')->count(),
+            'rework_count' => (clone $base)->where('status', 'rework')->count(),
+            'total_active' => (clone $base)->whereIn('status', ['booked', 'checked-in', 'rework'])->count(),
+        ];
+    }
+
     public function queue(Request $request): Response
     {
-        $date = $request->query('date', now()->toDateString());
+        $date = $request->query('date', 'all');
+        $centerId = $request->query('center_id');
+        $centerId = ($centerId && $centerId !== 'all') ? (int) $centerId : null;
+        $q = trim((string) $request->query('q', ''));
+        $filter = $request->query('filter', 'queue');
+
+        $query = Appointment::with('registrant.demographic', 'center');
+
+        if ($filter === 'rework') {
+            $query->where('status', 'rework');
+        } elseif ($date && $date !== 'all') {
+            $query->whereDate('slot_at', $date);
+        }
+
+        if ($centerId) {
+            $query->where('center_id', $centerId);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('qr_token', 'like', "%{$q}%")
+                    ->orWhere('id', $q)
+                    ->orWhereHas('registrant', function ($r) use ($q) {
+                        $r->where('mobile', 'like', "%{$q}%")
+                            ->orWhereHas('demographic', function ($d) use ($q) {
+                                $d->where('full_name', 'like', "%{$q}%")
+                                    ->orWhere('given_name', 'like', "%{$q}%")
+                                    ->orWhere('family_name', 'like', "%{$q}%");
+                            });
+                    });
+            });
+        }
+
+        $appointments = $query->orderBy('slot_at', 'asc')->get();
 
         return Inertia::render('staff/queue', [
             'date' => $date,
+            'selectedCenterId' => $centerId,
             'centers' => RegistrationCenter::where('is_active', true)->get(),
-            'appointments' => Appointment::with('registrant.demographic', 'center')
-                ->whereDate('slot_at', $date)
-                ->orderBy('slot_at')
-                ->get(),
-            'search' => $request->query('q', ''),
-            'results' => $request->query('q')
-                ? Registrant::with('demographic', 'appointments')
-                    ->where('mobile', 'like', '%'.$request->query('q').'%')
-                    ->orWhereHas('demographic', fn ($q) => $q->where('full_name', 'like', '%'.$request->query('q').'%'))
-                    ->limit(20)->get()
-                : [],
+            'appointments' => $appointments,
+            'search' => $q,
+            'filter' => $filter,
+            'stats' => $this->getStats($centerId),
         ]);
     }
 
@@ -46,6 +89,10 @@ class StaffController extends Controller
 
     public function walkin(Request $request): RedirectResponse
     {
+        if (!str_starts_with($request->input('mobile', ''), '+675') && preg_match('/^\d{7}$/', $request->input('mobile', ''))) {
+            $request->merge(['mobile' => '+675' . $request->input('mobile')]);
+        }
+
         $data = $request->validate([
             'full_name' => 'required|string|max:120',
             'mobile' => ['required', 'regex:/^\+675\d{7}$/'],
@@ -125,16 +172,24 @@ class StaffController extends Controller
         return redirect()->route('staff.queue')->with('submitted', true);
     }
 
-    public function rework(): Response
+    public function rework(Request $request): Response
     {
+        $centerId = $request->query('center_id');
+        $centerId = ($centerId && $centerId !== 'all') ? (int) $centerId : null;
+
+        $query = Appointment::with('registrant.demographic', 'center')->where('status', 'rework');
+        if ($centerId) {
+            $query->where('center_id', $centerId);
+        }
+
         return Inertia::render('staff/queue', [
-            'date' => now()->toDateString(),
+            'date' => 'all',
+            'selectedCenterId' => $centerId,
             'centers' => RegistrationCenter::where('is_active', true)->get(),
-            'appointments' => Appointment::with('registrant.demographic', 'center')
-                ->where('status', 'rework')->orderBy('slot_at')->get(),
+            'appointments' => $query->orderBy('slot_at')->get(),
             'search' => '',
-            'results' => [],
             'filter' => 'rework',
+            'stats' => $this->getStats($centerId),
         ]);
     }
 
@@ -142,6 +197,7 @@ class StaffController extends Controller
     {
         return Inertia::render('staff/setup', [
             'centers' => RegistrationCenter::all(),
+            'stats' => $this->getStats(),
         ]);
     }
 

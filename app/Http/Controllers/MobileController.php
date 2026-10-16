@@ -3,11 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\Registrant;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MobileController extends Controller
 {
+    public function otp(Request $request): JsonResponse
+    {
+        $data = $request->validate(['mobile' => 'required|string']);
+        abort_unless(Registrant::where('mobile', $data['mobile'])->exists(), 404);
+
+        $code = (string) random_int(100000, 999999);
+        cache()->put("otp:{$data['mobile']}", $code, now()->addMinutes(5));
+
+        return response()->json(['sent' => true, 'demo_code' => app()->isLocal() ? $code : null]);
+    }
+
     public function link(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -57,6 +70,18 @@ class MobileController extends Controller
             'issued_at' => $issuedAt,
             'sig' => hash_hmac('sha256', $token.'|'.$issuedAt, config('app.key')),
         ]);
+    }
+
+    public function qrSvg(Request $request): JsonResponse
+    {
+        /** @var Registrant $registrant */
+        $registrant = $request->user();
+        $token = $registrant->appointments()->latest()->first()?->qr_token;
+        abort_if(! $token, 404, 'No appointment QR available.');
+
+        $svg = (new SvgWriter)->write(new QrCode(url('/verify/offline?token='.$token)));
+
+        return response()->json(['svg' => $svg->getString()]);
     }
 
     public function timeline(Request $request): JsonResponse

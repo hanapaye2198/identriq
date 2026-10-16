@@ -2,10 +2,12 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { api } from './api';
 import demoReducer from './demo-slice';
 import preregReducer from './prereg-slice';
+import walletReducer from './wallet-slice';
 
 const rootReducer = combineReducers({
     demo: demoReducer,
     prereg: preregReducer,
+    wallet: walletReducer,
     [api.reducerPath]: api.reducer,
 });
 

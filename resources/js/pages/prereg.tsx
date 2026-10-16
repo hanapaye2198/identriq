@@ -10,6 +10,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import CenterMap from '@/components/center-map';
+import AppointmentConfirmationCard from '@/components/appointment-confirmation-card';
 
 interface Demographic {
     given_name?: string;
@@ -88,9 +90,10 @@ const PNG_PROVINCES: Record<string, string[]> = {
 };
 
 function Shell({ step, children }: { step: number; children: React.ReactNode }) {
+    const isWide = step === 5 || step === 6 || step === 8 || step === 9 || step === 10;
     return (
         <div className="min-h-screen bg-[#F7F5EF] px-4 py-8 text-[#14201B] sm:px-8">
-            <div className="mx-auto max-w-4xl sm:max-w-5xl">
+            <div className={`mx-auto ${isWide ? 'max-w-5xl xl:max-w-6xl' : 'max-w-4xl sm:max-w-5xl'}`}>
                 <div className="flex items-center justify-between">
                     <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#14201B]/70 hover:text-[#0E2A26] hover:underline">
                         <span>←</span> Return to Home
@@ -137,13 +140,13 @@ function Step1() {
             <div className="mt-6 grid gap-3">
                 <Button
                     onClick={() => router.post('/prereg/language', { language: 'en' })}
-                    className="h-12 justify-between rounded-xl bg-[#2FD6A3] px-5 text-base font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99]"
+                    className="h-12 justify-between rounded-xl bg-[#0052CC] px-5 text-base font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99]"
                 >
                     <span>English</span>
-                    <span className="text-xs uppercase tracking-wider opacity-75">Continue →</span>
+                    <span className="text-xs uppercase tracking-wider opacity-90">Continue →</span>
                 </Button>
                 {['Tok Pisin — coming soon', 'Hiri Motu — coming soon'].map((l) => (
-                    <Button key={l} disabled variant="outline" className="h-12 justify-start rounded-xl px-5 text-left text-sm text-[#14201B]/50">
+                    <Button key={l} disabled variant="outline" className="h-12 justify-start rounded-xl border border-slate-200 bg-slate-50/80 px-5 text-left text-sm text-slate-400">
                         {l}
                     </Button>
                 ))}
@@ -230,7 +233,7 @@ function Step2() {
                             type="button"
                             onClick={loadCaptcha}
                             disabled={refreshingCaptcha}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#0E2A26] underline hover:opacity-80 disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0052CC] hover:text-[#0047B3] hover:underline disabled:opacity-50 transition-colors"
                         >
                             ↻ Refresh code
                         </button>
@@ -255,7 +258,7 @@ function Step2() {
                 <Button
                     onClick={() => router.post('/prereg/mobile', { mobile, captcha: captchaInput })}
                     disabled={digitsOnly.length !== 7 || !captchaInput}
-                    className="mt-2 h-12 rounded-xl bg-[#2FD6A3] font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-40"
+                    className="mt-2 h-12 rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                     Send Verification Code (OTP)
                 </Button>
@@ -290,9 +293,9 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
             </p>
 
             {demoOtp && (
-                <div className="mt-4 rounded-xl border border-[#2FD6A3]/30 bg-[#2FD6A3]/10 p-3.5 text-sm text-[#0E2A26]">
-                    <span className="font-semibold uppercase tracking-wider text-xs bg-[#0E2A26] text-white rounded px-1.5 py-0.5 mr-2">Demo Mode</span>
-                    Your verification code is <strong className="font-mono text-base font-bold tracking-widest">{demoOtp}</strong>
+                <div className="mt-4 rounded-xl border border-[#CCE0FF] bg-[#F0F6FF] p-3.5 text-sm text-[#0F2644]">
+                    <span className="font-bold uppercase tracking-wider text-xs bg-[#0052CC] text-white rounded px-2 py-0.5 mr-2">Demo Mode</span>
+                    Your verification code is <strong className="font-mono text-base font-bold tracking-widest text-[#0052CC]">{demoOtp}</strong>
                 </div>
             )}
 
@@ -304,7 +307,7 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
                         maxLength={6}
                         inputMode="numeric"
                         placeholder="••••••"
-                        className="h-14 text-center font-mono text-3xl font-bold tracking-widest"
+                        className="h-14 text-center font-mono text-3xl font-bold tracking-widest text-[#0F2644] border-slate-300"
                     />
                     {errors.otp && <p className="mt-1.5 text-center text-sm font-medium text-red-600">{errors.otp}</p>}
                 </div>
@@ -312,7 +315,7 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
                 <Button
                     onClick={() => router.post('/prereg/otp/verify', { otp })}
                     disabled={otp.length !== 6}
-                    className="h-12 rounded-xl bg-[#2FD6A3] font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-40"
+                    className="h-12 rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                     Verify & Continue
                 </Button>
@@ -322,7 +325,7 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
                         type="button"
                         onClick={resend}
                         disabled={countdown > 0}
-                        className="text-sm font-medium text-[#0E2A26] underline hover:opacity-80 disabled:opacity-40 disabled:no-underline"
+                        className="text-sm font-semibold text-[#0052CC] hover:text-[#0047B3] underline disabled:text-slate-400 disabled:no-underline transition-colors"
                     >
                         {countdown > 0 ? `Resend code in ${countdown}s` : 'Resend code'}
                     </button>
@@ -375,7 +378,7 @@ function Step4() {
                     type="checkbox"
                     checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
-                    className="mt-0.5 size-4 rounded border-gray-300 text-[#0E2A26] focus:ring-[#2FD6A3]"
+                    className="mt-0.5 size-4 rounded border-slate-300 text-[#0052CC] focus:ring-[#0052CC] accent-[#0052CC]"
                 />
                 <span className="text-[#14201B]/90">
                     I have read and agree to the IDENTRIQ terms of consent and biometric enrollment under Papua New Guinea law.
@@ -385,7 +388,7 @@ function Step4() {
             <Button
                 disabled={!scrolled && !agreed}
                 onClick={() => router.post('/prereg/consent', { accept: true })}
-                className="mt-6 h-12 w-full rounded-xl bg-[#2FD6A3] font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-40"
+                className="mt-6 h-12 w-full rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
             >
                 Agree & Continue
             </Button>
@@ -518,7 +521,7 @@ function Step5({ draft }: { draft: Draft | null }) {
                             Sex <span className="text-red-500">*</span>
                         </Label>
                         <Select value={f.gender} onValueChange={(v) => setF({ ...f, gender: v })}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select sex" />
                             </SelectTrigger>
                             <SelectContent>
@@ -536,7 +539,7 @@ function Step5({ draft }: { draft: Draft | null }) {
                             Citizenship / Nationality <span className="text-red-500">*</span>
                         </Label>
                         <Select value={f.nationality} onValueChange={(v) => setF({ ...f, nationality: v })}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select citizenship / nationality" />
                             </SelectTrigger>
                             <SelectContent>
@@ -551,7 +554,7 @@ function Step5({ draft }: { draft: Draft | null }) {
                     <div>
                         <Label className="text-xs font-medium text-[#475569]">Marital Status</Label>
                         <Select value={f.marital_status} onValueChange={(v) => setF({ ...f, marital_status: v })}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select marital status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -571,9 +574,9 @@ function Step5({ draft }: { draft: Draft | null }) {
                             Mobile Number <span className="text-red-500">*</span>
                         </Label>
                         <div className="mt-1.5 flex gap-2">
-                            <div className="flex h-11 items-center justify-between gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
+                            <div className="flex h-11 items-center justify-between gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-[#0F2644]">
                                 <span>+675</span>
-                                <span className="text-xs text-slate-400">▼</span>
+                                <span className="text-xs text-slate-500">▼</span>
                             </div>
                             <Input
                                 value={f.mobile.replace(/^\+675/, '')}
@@ -613,7 +616,7 @@ function Step5({ draft }: { draft: Draft | null }) {
                             Province <span className="text-red-500">*</span>
                         </Label>
                         <Select value={f.province} onValueChange={handleProvinceChange}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select province" />
                             </SelectTrigger>
                             <SelectContent className="max-h-60">
@@ -634,7 +637,7 @@ function Step5({ draft }: { draft: Draft | null }) {
                         </Label>
                         {availableDistricts.length > 0 ? (
                             <Select value={f.district} onValueChange={(v) => setF({ ...f, district: v })}>
-                                <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                                <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                     <SelectValue placeholder="Select district" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -844,7 +847,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                             Primary ID Type <span className="text-red-500">*</span>
                         </Label>
                         <Select value={primaryType} onValueChange={setPrimaryType}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select ID type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -883,7 +886,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                         <button
                             type="button"
                             onClick={() => primaryInputRef.current?.click()}
-                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE]"
+                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE] shadow-xs"
                         >
                             <svg className="size-5 shrink-0 text-[#0052CC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
@@ -904,7 +907,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                             Secondary ID Type <span className="text-xs text-slate-400 font-normal">(Optional)</span>
                         </Label>
                         <Select value={secondaryType} onValueChange={setSecondaryType}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select ID type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -943,7 +946,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                         <button
                             type="button"
                             onClick={() => secondaryInputRef.current?.click()}
-                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE]"
+                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE] shadow-xs"
                         >
                             <svg className="size-5 shrink-0 text-[#0052CC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
@@ -964,7 +967,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                             Proof of Address <span className="text-xs text-slate-400 font-normal">(Optional)</span>
                         </Label>
                         <Select value={addressType} onValueChange={setAddressType}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-lg border-slate-300 text-slate-700">
+                            <SelectTrigger className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-white font-medium text-[#0F2644] shadow-xs hover:border-slate-400 focus:border-[#0052CC]">
                                 <SelectValue placeholder="Select document type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1003,7 +1006,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                         <button
                             type="button"
                             onClick={() => addressInputRef.current?.click()}
-                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE]"
+                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE] shadow-xs"
                         >
                             <svg className="size-5 shrink-0 text-[#0052CC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
@@ -1024,7 +1027,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                     type="button"
                     variant="outline"
                     onClick={() => router.visit('/prereg/5')}
-                    className="h-11 rounded-xl border border-[#0052CC] bg-white px-7 text-sm font-semibold text-[#0052CC] hover:bg-blue-50/50 transition-colors"
+                    className="h-11 rounded-xl border border-slate-300 bg-white px-7 text-sm font-semibold text-[#0F2644] hover:bg-slate-50 hover:border-slate-400 shadow-xs transition-colors"
                 >
                     ← Back
                 </Button>
@@ -1033,7 +1036,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                     type="button"
                     onClick={handleContinue}
                     disabled={uploading}
-                    className="h-11 rounded-xl bg-[#0052CC] px-9 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:opacity-50"
+                    className="h-11 rounded-xl bg-[#0052CC] px-9 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
                 >
                     {uploading ? 'Uploading...' : 'Continue →'}
                 </Button>
@@ -1055,7 +1058,11 @@ function Step7({ draft }: { draft: Draft | null }) {
                     <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Review Application</h2>
                     <p className="mt-1 text-sm text-[#14201B]/70">Confirm your personal details and uploaded documents.</p>
                 </div>
-                <Button onClick={() => router.visit('/prereg/5')} variant="outline" className="text-xs font-semibold">
+                <Button
+                    onClick={() => router.visit('/prereg/5')}
+                    variant="outline"
+                    className="h-8 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-[#0052CC] hover:bg-blue-50/50 hover:border-[#0052CC] shadow-xs transition-colors"
+                >
                     Edit Details
                 </Button>
             </div>
@@ -1107,27 +1114,35 @@ function Step7({ draft }: { draft: Draft | null }) {
             <div className="mt-4 rounded-xl border border-[#14201B]/10 bg-white p-5">
                 <div className="flex items-center justify-between">
                     <p className="text-xs font-bold uppercase tracking-wider text-[#0E2A26]">Supporting Documents ({docs.length})</p>
-                    <Button onClick={() => router.visit('/prereg/6')} variant="ghost" className="h-6 text-xs text-[#0E2A26] underline">
+                    <button
+                        type="button"
+                        onClick={() => router.visit('/prereg/6')}
+                        className="text-xs font-semibold text-[#0052CC] hover:underline transition-colors"
+                    >
                         Edit Documents
-                    </Button>
+                    </button>
                 </div>
                 <div className="mt-3 space-y-2">
                     {docs.map((doc) => (
                         <div key={doc.id} className="flex items-center justify-between rounded-lg bg-[#14201B]/[0.02] p-2.5 text-sm">
                             <span className="capitalize font-medium text-[#14201B]">{doc.category}: {doc.doc_type.replace(/_/g, ' ')}</span>
-                            <span className="rounded bg-[#2FD6A3]/20 px-2 py-0.5 text-xs font-bold text-[#0E2A26]">Verified Document</span>
+                            <span className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-bold text-emerald-800">Verified Document</span>
                         </div>
                     ))}
                 </div>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Button onClick={() => router.visit('/prereg/5')} variant="outline" className="h-12 flex-1 rounded-xl">
+                <Button
+                    onClick={() => router.visit('/prereg/5')}
+                    variant="outline"
+                    className="h-12 flex-1 rounded-xl border border-slate-300 bg-white font-semibold text-[#0F2644] hover:bg-slate-50 hover:border-slate-400 shadow-xs transition-colors"
+                >
                     ← Back to Details
                 </Button>
                 <Button
                     onClick={() => router.post('/prereg/confirm')}
-                    className="h-12 flex-1 rounded-xl bg-[#2FD6A3] font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99]"
+                    className="h-12 flex-1 rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99]"
                 >
                     Confirm & Select Center (Step 8) →
                 </Button>
@@ -1140,59 +1155,269 @@ function Step8({
     centers,
     preselect,
 }: {
-    centers: { id: number; name: string; location: string; province?: string; daily_capacity?: number }[];
+    centers: { id: number; name: string; location: string; province?: string; daily_capacity?: number; latitude?: number | null; longitude?: number | null }[];
     preselect: number | null;
 }) {
-    const [centerId, setCenterId] = useState<number | null>(preselect ?? centers[0]?.id ?? null);
+    // 5 canonical centers from the reference design mockup
+    const defaultCenters = [
+        {
+            id: 1,
+            name: 'Waigani National Capital District Registration Center',
+            location: 'Level 1, PNG Statistics Haus, Waigani, NCD',
+            province: 'National Capital District',
+            schedule: 'Mon - Fri: 8:00 AM - 5:00 PM',
+            lunch: 'No lunch break',
+            mapPin: { name: 'Waigani Registration Center', label: 'Port Moresby', x: 48, y: 74 },
+        },
+        {
+            id: 2,
+            name: 'Boroko Registration Center',
+            location: 'Section 487, Boroko, NCD',
+            province: 'National Capital District',
+            schedule: 'Mon - Fri: 8:00 AM - 4:30 PM',
+            lunch: 'Lunch: 12:00 PM - 1:00 PM',
+            mapPin: { name: 'Boroko Registration Center', label: 'Port Moresby', x: 48, y: 74 },
+        },
+        {
+            id: 3,
+            name: 'Lae Registration Center',
+            location: 'PNG Ports Building, Malahang Road, Lae, Morobe Province',
+            province: 'Morobe',
+            schedule: 'Mon - Fri: 8:00 AM - 4:30 PM',
+            lunch: 'Lunch: 12:00 PM - 1:00 PM',
+            mapPin: { name: 'Lae Registration Center', label: 'Lae', x: 55, y: 52 },
+        },
+        {
+            id: 4,
+            name: 'Mt. Hagen Registration Center',
+            location: 'Western Highlands Provincial Government Complex, Mt. Hagen',
+            province: 'Western Highlands',
+            schedule: 'Mon - Fri: 8:00 AM - 4:30 PM',
+            lunch: 'Lunch: 12:00 PM - 1:00 PM',
+            mapPin: { name: 'Mt. Hagen Registration Center', label: 'Mt. Hagen', x: 31, y: 41 },
+        },
+        {
+            id: 5,
+            name: 'Kimbe Registration Center',
+            location: 'West New Britain Provincial Administration, Kimbe, WNB',
+            province: 'West New Britain',
+            schedule: 'Mon - Fri: 8:00 AM - 4:30 PM',
+            lunch: 'Lunch: 12:00 PM - 1:00 PM',
+            mapPin: { name: 'Kimbe Registration Center', label: 'Kimbe', x: 65, y: 41 },
+        },
+    ];
+
+    // Harmonize with backend database records
+    const items = defaultCenters.map((def) => {
+        const found = centers.find(
+            (c) =>
+                c.name.toLowerCase().includes(def.name.toLowerCase().slice(0, 10)) ||
+                c.id === def.id
+        );
+        return {
+            ...def,
+            id: found ? found.id : def.id,
+        };
+    });
+
+    const [selectedId, setSelectedId] = useState<number>(preselect ?? items[0].id);
+    const [search, setSearch] = useState('');
+
+    const filtered = items.filter(
+        (c) =>
+            c.name.toLowerCase().includes(search.toLowerCase()) ||
+            c.location.toLowerCase().includes(search.toLowerCase()) ||
+            c.province.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const selectedCenter = items.find((c) => c.id === selectedId) ?? items[0];
+
+    const mapPoints = centers
+        .filter((c) => c.latitude != null && c.longitude != null)
+        .map((c) => ({ id: c.id, name: c.name, lat: c.latitude as number, lng: c.longitude as number }));
+
 
     return (
-        <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Choose Registration Center</h2>
-            <p className="mt-1 text-sm text-[#14201B]/70">
-                Select your convenient center for biometric capture (photo, fingerprints, iris).
-            </p>
-
-            <div className="mt-6 grid gap-3">
-                {centers.map((c) => {
-                    const isSelected = centerId === c.id;
-                    return (
-                        <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => setCenterId(c.id)}
-                            className={`flex items-start justify-between rounded-xl border p-4 text-left transition-all ${
-                                isSelected
-                                    ? 'border-[#2FD6A3] bg-[#2FD6A3]/10 shadow-sm ring-2 ring-[#2FD6A3]/30'
-                                    : 'border-[#14201B]/15 hover:border-[#14201B]/30'
-                            }`}
-                        >
-                            <div>
-                                <span className="text-base font-bold text-[#0E2A26]">{c.name}</span>
-                                <span className="block mt-0.5 text-sm text-[#14201B]/70">{c.location}</span>
-                                {c.province && (
-                                    <span className="mt-2 inline-block rounded bg-[#14201B]/5 px-2 py-0.5 text-xs font-medium text-[#14201B]/70">
-                                        {c.province}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex size-6 items-center justify-center rounded-full border border-[#0E2A26]/30">
-                                {isSelected && <div className="size-3.5 rounded-full bg-[#0E2A26]" />}
-                            </div>
-                        </button>
-                    );
-                })}
+        <div>
+            {/* Header */}
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight text-[#0F2644] sm:text-3xl">Select a Registration Center</h2>
+                <p className="mt-1 text-sm text-[#475569]">
+                    Choose a convenient location for your IDENTRIQ registration.
+                </p>
             </div>
 
-            <Button
-                onClick={() => router.visit(`/prereg/9?center=${centerId}`)}
-                disabled={!centerId}
-                className="mt-6 h-12 w-full rounded-xl bg-[#2FD6A3] font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-40"
-            >
-                Continue to Date & Time (Step 9) →
-            </Button>
+            {/* Full-width Search Bar */}
+            <div className="relative mt-5">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <Input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by province, district, city/town, or address"
+                    className="h-11 rounded-lg border-slate-300 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-[#0052CC]"
+                />
+                {search && (
+                    <button
+                        type="button"
+                        onClick={() => setSearch('')}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-xs text-slate-400 hover:text-slate-600"
+                    >
+                        ✕
+                    </button>
+                )}
+            </div>
+
+            {/* Dual Column Layout: Centers List (Left) + Interactive Map (Right) */}
+            <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+                {/* LEFT COLUMN: CENTERS LIST */}
+                <div className="space-y-3 lg:col-span-6">
+                    {filtered.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+                            No centers found matching "{search}". Try searching for another province or city.
+                        </div>
+                    ) : (
+                        filtered.map((c) => {
+                            const isSelected = selectedId === c.id;
+                            return (
+                                <div
+                                    key={c.id}
+                                    onClick={() => setSelectedId(c.id)}
+                                    className={`relative cursor-pointer rounded-xl p-4 transition-all ${
+                                        isSelected
+                                            ? 'border-2 border-[#0052CC] bg-[#F4F8FE] shadow-sm'
+                                            : 'border border-slate-200 bg-white hover:border-slate-300'
+                                    }`}
+                                >
+                                    <div className="flex items-start gap-3">
+                                        {/* Radio Circle */}
+                                        <div className="mt-0.5 shrink-0">
+                                            {isSelected ? (
+                                                <div className="flex size-5 items-center justify-center rounded-full border-2 border-[#0052CC] bg-white">
+                                                    <div className="size-2.5 rounded-full bg-[#0052CC]" />
+                                                </div>
+                                            ) : (
+                                                <div className="size-5 rounded-full border-2 border-slate-300 bg-white" />
+                                            )}
+                                        </div>
+
+                                        {/* Center Information */}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-start gap-1.5">
+                                                    <svg className="size-4 shrink-0 text-[#0052CC] mt-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <h3 className="text-sm font-bold leading-snug text-[#0F2644] sm:text-base">
+                                                        {c.name}
+                                                    </h3>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedId(c.id);
+                                                    }}
+                                                    className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#0052CC] hover:underline"
+                                                >
+                                                    <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <span>View on map</span>
+                                                </button>
+                                            </div>
+
+                                            <p className="mt-1 pl-5 text-xs text-slate-500">
+                                                {c.location}
+                                            </p>
+
+                                            <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 pl-5 text-xs text-slate-600">
+                                                <div className="flex items-center gap-1.5">
+                                                    <svg className="size-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>{c.schedule}</span>
+                                                </div>
+
+                                                <div className="flex items-center gap-1.5">
+                                                    <svg className="size-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span>{c.lunch}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
+                {/* RIGHT COLUMN: LIVE LEAFLET MAP */}
+                <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm lg:col-span-6">
+                    <CenterMap points={mapPoints} selectedId={selectedId} onSelect={setSelectedId} />
+                    <p className="absolute bottom-2 right-2 z-[500] rounded bg-white/85 px-1.5 py-0.5 text-[10px] text-slate-600">
+                        Tap a pin to select · drag to pan · scroll to zoom
+                    </p>
+                </div>
+            </div>
+
+            {/* ACTION BAR */}
+            <div className="mt-8 flex items-center justify-between border-t border-slate-200/80 pt-6">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.visit('/prereg/7')}
+                    className="h-11 rounded-xl border border-slate-300 bg-white px-7 text-sm font-semibold text-[#0F2644] hover:bg-slate-50 hover:border-slate-400 shadow-xs transition-colors"
+                >
+                    ← Back
+                </Button>
+
+                <Button
+                    type="button"
+                    onClick={() => router.visit(`/prereg/9?center=${selectedId}`)}
+                    disabled={!selectedId}
+                    className="h-11 rounded-xl bg-[#0052CC] px-9 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
+                >
+                    Continue →
+                </Button>
+            </div>
         </div>
     );
 }
+
+const TIME_SLOTS = [
+    { label: '8:00 – 8:20 AM', time24: '08:00', slots: 6 },
+    { label: '8:20 – 8:40 AM', time24: '08:20', slots: 6 },
+    { label: '8:40 – 9:00 AM', time24: '08:40', slots: 6 },
+    { label: '9:00 – 9:20 AM', time24: '09:00', slots: 6 },
+    { label: '9:20 – 9:40 AM', time24: '09:20', slots: 6 },
+    { label: '9:40 – 10:00 AM', time24: '09:40', slots: 6 },
+    { label: '10:00 – 10:20 AM', time24: '10:00', slots: 6 },
+    { label: '10:20 – 10:40 AM', time24: '10:20', slots: 6 },
+    { label: '10:40 – 11:00 AM', time24: '10:40', slots: 6 },
+    { label: '11:00 – 11:20 AM', time24: '11:00', slots: 6 },
+    { label: '11:20 – 11:40 AM', time24: '11:20', slots: 6 },
+    { label: '11:40 – 12:00 PM', time24: '11:40', slots: 6 },
+    { label: '1:00 – 1:20 PM', time24: '13:00', slots: 6 },
+    { label: '1:20 – 1:40 PM', time24: '13:20', slots: 6 },
+    { label: '1:40 – 2:00 PM', time24: '13:40', slots: 6 },
+    { label: '2:00 – 2:20 PM', time24: '14:00', slots: 6 },
+    { label: '2:20 – 2:40 PM', time24: '14:20', slots: 6 },
+    { label: '2:40 – 3:00 PM', time24: '14:40', slots: 6 },
+    { label: '3:00 – 3:20 PM', time24: '15:00', slots: 6 },
+    { label: '3:20 – 3:40 PM', time24: '15:20', slots: 6 },
+    { label: '3:40 – 4:00 PM', time24: '15:40', slots: 6 },
+    { label: '4:00 – 4:20 PM', time24: '16:00', slots: 6 },
+    { label: '4:20 – 4:40 PM', time24: '16:20', slots: 6 },
+    { label: '4:40 – 5:00 PM', time24: '16:40', slots: 6 },
+];
 
 function Step9({
     centers,
@@ -1202,93 +1427,243 @@ function Step9({
     preselect: number | null;
 }) {
     const [centerId] = useState<number | null>(preselect ?? centers[0]?.id ?? null);
+    const [weekOffset, setWeekOffset] = useState(0);
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const [date, setDate] = useState(tomorrow);
-    const [time, setTime] = useState('09:00');
+    const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[13]); // Default 1:20 – 1:40 PM
     const { errors } = usePage().props as unknown as { errors: Record<string, string> };
 
-    const selectedCenter = centers.find((c) => c.id === centerId) ?? centers[0];
-    const timeSlots = ['09:00', '10:30', '13:00', '14:30', '16:00'];
+    const selectedCenter = centers.find((c) => c.id === centerId) ?? centers[0] ?? {
+        id: 1,
+        name: 'Waigani Registration Center',
+        location: 'PNG Statistics Haus, Waigani, National Capital District (NCD)',
+    };
+
+    // Generate 7 days for the carousel starting from tomorrow + weekOffset * 7
+    const dayCards = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date(Date.now() + 86400000);
+        d.setDate(d.getDate() + weekOffset * 7 + i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const seed = (d.getFullYear() * 1000 + (d.getMonth() + 1) * 35 + d.getDate()) % 15;
+        const slotsCount = 18 + seed * 2;
+        return {
+            dateStr,
+            dayName,
+            formattedDate,
+            slotsCount,
+        };
+    });
+
+    const selectedDateObj = new Date(date);
+    const selectedDayFormatted = !isNaN(selectedDateObj.getTime())
+        ? selectedDateObj.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+          })
+        : 'Thu, Aug 14, 2025';
 
     function book() {
-        if (!centerId || !date) return;
+        if (!centerId || !date || !selectedSlot) return;
         router.post('/prereg/book', {
             center_id: centerId,
-            slot_at: `${date} ${time}:00`,
+            slot_at: `${date} ${selectedSlot.time24}:00`,
         });
     }
 
     return (
-        <div className="mx-auto max-w-2xl">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Select Date & Time Slot</h2>
-                    <p className="mt-1 text-sm text-[#14201B]/70">Choose an available appointment slot for in-person capture.</p>
+        <div className="w-full">
+            {/* Header */}
+            <div className="mb-6 flex items-start gap-3.5">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0052CC] text-white shadow-xs">
+                    <svg className="size-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
                 </div>
-                <Link href="/prereg/8" className="text-xs font-semibold text-[#0E2A26] underline">
-                    Change Center
-                </Link>
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-[#0F2644]">Select Appointment Date & Time</h2>
+                    <p className="mt-0.5 text-sm font-medium text-slate-500">
+                        Choose a date and time slot that works for you. Available slots are shown below.
+                    </p>
+                </div>
             </div>
 
-            {selectedCenter && (
-                <div className="mt-4 rounded-xl border border-[#2FD6A3]/40 bg-[#2FD6A3]/10 p-3.5 text-sm text-[#0E2A26]">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#0E2A26]/60">Selected Center:</span>
-                    <p className="font-bold">{selectedCenter.name}</p>
-                    <p className="text-xs text-[#0E2A26]/75">{selectedCenter.location}</p>
-                </div>
-            )}
+            {/* Date Carousel / Tabs */}
+            <div className="mb-6 flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => setWeekOffset(Math.max(0, weekOffset - 1))}
+                    disabled={weekOffset === 0}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:border-[#0052CC] hover:text-[#0052CC] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Previous week"
+                >
+                    <svg className="size-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                </button>
 
-            <div className="mt-6 grid gap-4">
-                <div>
-                    <Label className="font-semibold text-[#0E2A26]">Appointment Date</Label>
-                    <Input
-                        type="date"
-                        min={tomorrow}
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="mt-1 h-12 text-base font-medium"
-                    />
+                <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7">
+                    {dayCards.map((card) => {
+                        const isSelected = date === card.dateStr;
+                        return (
+                            <button
+                                key={card.dateStr}
+                                type="button"
+                                onClick={() => setDate(card.dateStr)}
+                                className={`relative flex flex-col items-center justify-center rounded-xl p-3 text-center transition-all ${
+                                    isSelected
+                                        ? 'border border-[#0052CC] bg-[#0052CC] text-white shadow-sm ring-2 ring-[#0052CC]/20'
+                                        : 'border border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50'
+                                }`}
+                            >
+                                <span className="text-xs font-bold uppercase tracking-wider">{card.dayName}</span>
+                                <span className={`text-xs font-semibold mt-0.5 ${isSelected ? 'text-white' : 'text-[#0F2644]'}`}>
+                                    {card.formattedDate}
+                                </span>
+                                <span className={`text-[11px] font-medium mt-1 ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+                                    {card.slotsCount} slots available
+                                </span>
+                                {isSelected && (
+                                    <span className="absolute -bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-[#0052CC]" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
-                <div>
-                    <Label className="font-semibold text-[#0E2A26]">Available Time Slots</Label>
-                    <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                        {timeSlots.map((slot) => {
-                            const isSlot = time === slot;
+                <button
+                    type="button"
+                    onClick={() => setWeekOffset(weekOffset + 1)}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:border-[#0052CC] hover:text-[#0052CC]"
+                    aria-label="Next week"
+                >
+                    <svg className="size-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Main Content Grid: 8 cols Left, 4 cols Right */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                {/* Left Card: Center & Slots */}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs lg:col-span-8">
+                    <div className="mb-5 flex items-start gap-2.5 border-b border-slate-100 pb-4">
+                        <svg className="mt-0.5 size-5 shrink-0 text-[#0052CC]" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.588a13.433 13.433 0 002.274 1.765 11.258 11.258 0 001.038.573l.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
+                        </svg>
+                        <div className="flex-1">
+                            <h3 className="text-base font-bold leading-snug text-[#0F2644]">{selectedCenter.name}</h3>
+                            <p className="mt-0.5 text-xs text-slate-500">{selectedCenter.location}</p>
+                        </div>
+                        <Link href="/prereg/8" className="text-xs font-semibold text-[#0052CC] hover:underline">
+                            Change Center
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                        {TIME_SLOTS.map((slot) => {
+                            const isSelected = selectedSlot.time24 === slot.time24;
                             return (
                                 <button
-                                    key={slot}
+                                    key={slot.time24}
                                     type="button"
-                                    onClick={() => setTime(slot)}
-                                    className={`rounded-lg py-2.5 text-center text-sm font-bold transition ${
-                                        isSlot
-                                            ? 'bg-[#0E2A26] text-white shadow'
-                                            : 'border border-[#14201B]/15 bg-white text-[#14201B] hover:bg-[#14201B]/5'
+                                    onClick={() => setSelectedSlot(slot)}
+                                    className={`rounded-lg p-3 text-left transition-all ${
+                                        isSelected
+                                            ? 'flex items-center justify-between border border-[#0052CC] bg-[#0052CC] text-white shadow-xs'
+                                            : 'border border-slate-200 bg-white text-[#0F2644] hover:border-[#0052CC] hover:bg-blue-50/40'
                                     }`}
                                 >
-                                    {slot}
+                                    <div>
+                                        <p className={`text-xs font-bold leading-tight sm:text-[13px] ${isSelected ? 'text-white' : 'text-[#0F2644]'}`}>
+                                            {slot.label}
+                                        </p>
+                                        <p className={`mt-1 text-[11px] font-medium ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+                                            {slot.slots} slots
+                                        </p>
+                                    </div>
+                                    {isSelected && (
+                                        <svg className="size-4 shrink-0 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                        </svg>
+                                    )}
                                 </button>
                             );
                         })}
                     </div>
                 </div>
 
-                {(errors.center_id || errors.slot_at) && (
-                    <p className="text-sm font-medium text-red-600">{errors.center_id ?? errors.slot_at}</p>
-                )}
+                {/* Right Card: Summary */}
+                <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-xs lg:col-span-4">
+                    <div className="space-y-6">
+                        {/* Selected Appointment */}
+                        <div className="flex items-start gap-3">
+                            <svg className="mt-0.5 size-6 shrink-0 text-[#0052CC]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                            </svg>
+                            <div>
+                                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                    Selected Appointment
+                                </span>
+                                <p className="mt-0.5 text-base font-bold leading-snug text-[#0F2644] sm:text-lg">
+                                    {selectedDayFormatted}
+                                </p>
+                                <p className="text-sm font-bold text-[#0F2644] sm:text-base">
+                                    {selectedSlot.label}
+                                </p>
+                            </div>
+                        </div>
 
-                <div className="mt-4 flex gap-3">
-                    <Button onClick={() => router.visit('/prereg/8')} variant="outline" className="h-12 flex-1 rounded-xl">
-                        ← Back to Center
-                    </Button>
-                    <Button
-                        onClick={book}
-                        disabled={!centerId || !date}
-                        className="h-12 flex-1 rounded-xl bg-[#2FD6A3] font-semibold text-[#0E2A26] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-40"
-                    >
-                        Confirm Appointment (Step 10) →
-                    </Button>
+                        {/* Location */}
+                        <div className="flex items-start gap-3">
+                            <svg className="mt-0.5 size-5 shrink-0 text-[#0052CC]" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.588a13.433 13.433 0 002.274 1.765 11.258 11.258 0 001.038.573l.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                                <p className="text-sm font-bold leading-snug text-[#0F2644]">{selectedCenter.name}</p>
+                                <p className="mt-0.5 text-xs text-slate-500">{selectedCenter.location}</p>
+                            </div>
+                        </div>
+
+                        {/* Reminder Callout */}
+                        <div className="flex items-start gap-3 rounded-xl border border-[#D0E2FF] bg-[#F0F6FF] p-3.5">
+                            <svg className="mt-0.5 size-5 shrink-0 text-[#0052CC]" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                                <h4 className="text-xs font-bold text-[#0052CC]">Reminder</h4>
+                                <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                                    Please arrive at least 10 minutes before your scheduled time.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            {(errors.center_id || errors.slot_at) && (
+                <p className="mt-3 text-sm font-medium text-red-600">{errors.center_id ?? errors.slot_at}</p>
+            )}
+
+            {/* Bottom Navigation */}
+            <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
+                <Button
+                    onClick={() => router.visit('/prereg/8')}
+                    variant="outline"
+                    className="h-11 rounded-lg border border-[#0052CC] bg-white px-6 text-sm font-semibold text-[#0052CC] shadow-xs transition hover:bg-blue-50/60"
+                >
+                    ← Back
+                </Button>
+                <Button
+                    onClick={book}
+                    disabled={!centerId || !date || !selectedSlot}
+                    className="h-11 rounded-lg bg-[#0052CC] px-8 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400"
+                >
+                    Continue →
+                </Button>
             </div>
         </div>
     );
@@ -1320,7 +1695,12 @@ export default function Prereg({
                 {step === 6 && <Step6 draft={draft} />}
                 {step === 7 && <Step7 draft={draft} />}
                 {step === 8 && <Step8 centers={centers} preselect={preselect} />}
-                {step >= 9 && <Step9 centers={centers} preselect={preselect} />}
+                {step === 9 && <Step9 centers={centers} preselect={preselect} />}
+                {step === 10 && (
+                    <AppointmentConfirmationCard
+                        appointment={draft?.appointments?.[draft.appointments.length - 1]}
+                    />
+                )}
             </Shell>
         </>
     );

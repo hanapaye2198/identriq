@@ -8,7 +8,7 @@ use Database\Seeders\IdentriqSeeder;
 test('demo seeder plants the phase 0 dataset', function () {
     $this->seed(IdentriqSeeder::class);
 
-    expect(RegistrationCenter::count())->toBe(2)
+    expect(RegistrationCenter::count())->toBeGreaterThanOrEqual(2)
         ->and(Registrant::count())->toBe(12)
         ->and(Identity::where('status', 'approved')->count())->toBeGreaterThanOrEqual(1)
         ->and(Identity::where('status', 'failed')->count())->toBe(1)

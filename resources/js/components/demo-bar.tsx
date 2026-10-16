@@ -1,8 +1,14 @@
 import { useState } from 'react';
+import { router } from '@inertiajs/react';
 import { setRole, type DemoRole } from '@/lib/demo-slice';
 import { useAppDispatch, useAppSelector } from '@/lib/redux-hooks';
 
-const ROLES: DemoRole[] = ['guest', 'staff', 'admin', 'verifier'];
+const ROLES: { role: DemoRole; home: string }[] = [
+    { role: 'guest', home: '/' },
+    { role: 'staff', home: '/staff' },
+    { role: 'admin', home: '/admin/validation' },
+    { role: 'verifier', home: '/verify/offline' },
+];
 
 function csrfToken(): string {
     return (
@@ -39,11 +45,14 @@ export default function DemoBar() {
             <span>Demo mode · integrations simulated</span>
             <span className="mx-1 text-white/25">|</span>
             <div className="flex items-center gap-1">
-                {ROLES.map((r) => (
+                {ROLES.map(({ role: r, home }) => (
                     <button
                         key={r}
                         type="button"
-                        onClick={() => dispatch(setRole(r))}
+                        onClick={() => {
+                            dispatch(setRole(r));
+                            router.visit(home);
+                        }}
                         className={`rounded-full px-2 py-0.5 capitalize ${
                             role === r
                                 ? 'bg-[#2FD6A3] text-[#0E2A26]'

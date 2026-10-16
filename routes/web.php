@@ -29,6 +29,10 @@ Route::post('/prereg/book', [PreregController::class, 'book'])->name('prereg.boo
 Route::get('/track', [TrackController::class, 'index'])->name('track');
 Route::post('/track/lookup', [TrackController::class, 'lookup'])->name('track.lookup');
 
+Route::inertia('/m', 'm/link')->name('m.link');
+Route::inertia('/m/wallet', 'm/wallet')->name('m.wallet');
+Route::inertia('/m/verify', 'm/verifier')->name('m.verify');
+
 Route::get('/staff', [StaffController::class, 'queue'])->name('staff.queue');
 Route::get('/staff/rework', [StaffController::class, 'rework'])->name('staff.rework');
 Route::post('/staff/appointments/{appointment}/checkin', [StaffController::class, 'checkin'])->name('staff.checkin');

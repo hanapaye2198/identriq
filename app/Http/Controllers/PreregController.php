@@ -183,8 +183,8 @@ class PreregController extends Controller
             $data['full_name'] = trim($data['given_name'].$middle.' '.$data['family_name']);
         } elseif (! empty($data['full_name'])) {
             $parts = explode(' ', $data['full_name'], 2);
-            $data['given_name'] = $data['given_name'] ?? $parts[0] ?? '';
-            $data['family_name'] = $data['family_name'] ?? $parts[1] ?? $parts[0] ?? '';
+            $data['given_name'] = $data['given_name'] ?? $parts[0];
+            $data['family_name'] = $data['family_name'] ?? ($parts[1] ?? $parts[0]);
         }
 
         // Harmonize gender / sex

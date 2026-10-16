@@ -45,7 +45,7 @@ interface Appointment {
 interface Draft {
     mobile?: string;
     demographic?: Demographic | null;
-    documents?: { id: number; category: string; doc_type: string; verified_status: string }[];
+    documents?: { id: number; category: string; doc_type: string; ref_number?: string | null; verified_status: string }[];
     appointments?: Appointment[];
 }
 

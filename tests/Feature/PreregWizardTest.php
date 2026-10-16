@@ -170,4 +170,3 @@ test('supporting documents batch upload persists ref_number for all uploaded fil
 
     expect($primary->fresh()->ref_number)->toBe('PNG-P-UPDATED-001');
 });
-

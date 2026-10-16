@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Registrant extends Model
 {
     use HasApiTokens;
+
     protected $fillable = [
         'language',
         'mobile',

@@ -761,49 +761,43 @@ function Step6({ draft }: { draft: Draft | null }) {
     function handleContinue() {
         setClientError('');
 
-        // If user picked files, upload via batch FormData
-        if (primaryFile || secondaryFile || addressFile) {
-            if (!primaryType && (primaryFile || !existingPrimary)) {
-                setClientError('Please select a Primary ID Type.');
-                return;
-            }
-            if (!primaryFile && !existingPrimary) {
-                setClientError('Please choose a file for your Primary ID.');
-                return;
-            }
+        const hasAnyNewFiles = Boolean(primaryFile || secondaryFile || addressFile);
 
-            setUploading(true);
-            const fd = new FormData();
-            if (primaryFile) {
-                fd.append('primary_file', primaryFile);
-                fd.append('primary_doc_type', primaryType || 'birth_certificate');
-                if (primaryRef) fd.append('primary_ref_number', primaryRef);
-            }
-            if (secondaryFile) {
-                fd.append('secondary_file', secondaryFile);
-                fd.append('secondary_doc_type', secondaryType || 'employment_id');
-                if (secondaryRef) fd.append('secondary_ref_number', secondaryRef);
-            }
-            if (addressFile) {
-                fd.append('address_file', addressFile);
-                fd.append('address_doc_type', addressType || 'utility_bill');
-                if (addressRef) fd.append('address_ref_number', addressRef);
-            }
-
-            router.post('/prereg/documents', fd, {
-                forceFormData: true,
-                onFinish: () => setUploading(false),
-            });
+        if (!hasAnyNewFiles && !hasPrimaryUploaded) {
+            setClientError('Please choose a file for your Primary ID.');
             return;
         }
 
-        // If documents already uploaded in session, proceed to step 7
-        if (hasPrimaryUploaded || docs.length > 0) {
-            router.visit('/prereg/7');
+        if (!primaryType && !existingPrimary) {
+            setClientError('Please select a Primary ID Type.');
             return;
         }
 
-        setClientError('Please select and upload at least your Primary ID.');
+        setUploading(true);
+        const fd = new FormData();
+        fd.append('batch_mode', '1');
+        if (primaryFile) {
+            fd.append('primary_file', primaryFile);
+        }
+        if (primaryType) fd.append('primary_doc_type', primaryType);
+        if (primaryRef) fd.append('primary_ref_number', primaryRef);
+
+        if (secondaryFile) {
+            fd.append('secondary_file', secondaryFile);
+        }
+        if (secondaryType) fd.append('secondary_doc_type', secondaryType);
+        if (secondaryRef) fd.append('secondary_ref_number', secondaryRef);
+
+        if (addressFile) {
+            fd.append('address_file', addressFile);
+        }
+        if (addressType) fd.append('address_doc_type', addressType);
+        if (addressRef) fd.append('address_ref_number', addressRef);
+
+        router.post('/prereg/documents', fd, {
+            forceFormData: true,
+            onFinish: () => setUploading(false),
+        });
     }
 
     return (
@@ -817,30 +811,32 @@ function Step6({ draft }: { draft: Draft | null }) {
                     </p>
                 </div>
 
-                <div className="flex max-w-sm items-start gap-2.5 rounded-xl border border-[#D0E2FF] bg-[#F0F6FF] p-3 text-xs text-[#0047B3]">
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#0052CC] font-bold text-white">
-                        i
-                    </span>
+                <div className="flex max-w-sm items-start gap-2.5 rounded-xl border border-[#CCE0FF] bg-[#F0F6FF] px-4 py-3 text-xs text-[#0F2644] shadow-sm">
+                    <svg className="size-5 shrink-0 text-[#0052CC]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <circle cx="12" cy="12" r="9" />
+                        <line x1="12" y1="8" x2="12" y2="8.01" strokeLinecap="round" />
+                        <line x1="12" y1="11" x2="12" y2="16" strokeLinecap="round" />
+                    </svg>
                     <div className="leading-snug">
-                        <p className="font-semibold">Accepted formats: PDF, JPG, JPEG, PNG.</p>
-                        <p className="mt-0.5 text-[#0047B3]/80">Maximum file size: 5 MB per file.</p>
+                        <p className="font-semibold text-[#0F2644]">Accepted formats: PDF, JPG, JPEG, PNG.</p>
+                        <p className="mt-0.5 text-slate-500">Maximum file size: 5 MB per file.</p>
                     </div>
                 </div>
             </div>
 
             {clientError && (
-                <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm font-medium text-red-600">
                     {clientError}
                 </div>
             )}
             {Object.keys(errors).length > 0 && (
-                <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm font-medium text-red-600">
                     {Object.values(errors)[0]}
                 </div>
             )}
 
             {/* Document Form Rows */}
-            <div className="mt-6 space-y-6 border-t border-slate-200/80 pt-6">
+            <div className="mt-8 space-y-6">
                 {/* ROW 1: PRIMARY ID */}
                 <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-3">
                     <div>
@@ -856,6 +852,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                                 <SelectItem value="passport">Passport</SelectItem>
                                 <SelectItem value="drivers_licence">Driver's Licence</SelectItem>
                                 <SelectItem value="national_id">National Identity Card</SelectItem>
+                                <SelectItem value="statutory_declaration">Statutory Declaration</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -868,7 +865,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                             value={primaryRef}
                             onChange={(e) => setPrimaryRef(e.target.value)}
                             placeholder="Enter document number"
-                            className="mt-1.5 h-11 rounded-lg border-slate-300"
+                            className="mt-1.5 h-11 rounded-lg border-slate-300 placeholder:text-slate-400"
                         />
                     </div>
 
@@ -886,10 +883,12 @@ function Step6({ draft }: { draft: Draft | null }) {
                         <button
                             type="button"
                             onClick={() => primaryInputRef.current?.click()}
-                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-slate-50"
+                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE]"
                         >
-                            <svg className="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <svg className="size-5 shrink-0 text-[#0052CC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                                <path d="M12 12v9" />
+                                <path d="m16 16-4-4-4 4" />
                             </svg>
                             <span className="truncate">
                                 {primaryFile ? primaryFile.name : (existingPrimary ? '✓ File Uploaded' : 'Choose file')}
@@ -913,6 +912,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                                 <SelectItem value="statutory_declaration">Statutory Declaration</SelectItem>
                                 <SelectItem value="student_id">Student ID / School Certificate</SelectItem>
                                 <SelectItem value="church_leader_letter">Church / Community Leader ID</SelectItem>
+                                <SelectItem value="drivers_licence">Driver's Licence</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -925,7 +925,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                             value={secondaryRef}
                             onChange={(e) => setSecondaryRef(e.target.value)}
                             placeholder="Enter document number"
-                            className="mt-1.5 h-11 rounded-lg border-slate-300"
+                            className="mt-1.5 h-11 rounded-lg border-slate-300 placeholder:text-slate-400"
                         />
                     </div>
 
@@ -943,10 +943,12 @@ function Step6({ draft }: { draft: Draft | null }) {
                         <button
                             type="button"
                             onClick={() => secondaryInputRef.current?.click()}
-                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-slate-50"
+                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE]"
                         >
-                            <svg className="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <svg className="size-5 shrink-0 text-[#0052CC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                                <path d="M12 12v9" />
+                                <path d="m16 16-4-4-4 4" />
                             </svg>
                             <span className="truncate">
                                 {secondaryFile ? secondaryFile.name : (existingSecondary ? '✓ File Uploaded' : 'Choose file')}
@@ -983,7 +985,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                             value={addressRef}
                             onChange={(e) => setAddressRef(e.target.value)}
                             placeholder="Enter document number"
-                            className="mt-1.5 h-11 rounded-lg border-slate-300"
+                            className="mt-1.5 h-11 rounded-lg border-slate-300 placeholder:text-slate-400"
                         />
                     </div>
 
@@ -1001,10 +1003,12 @@ function Step6({ draft }: { draft: Draft | null }) {
                         <button
                             type="button"
                             onClick={() => addressInputRef.current?.click()}
-                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-slate-50"
+                            className="mt-1.5 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#C6DCFC] bg-[#F8FAFF] px-3 text-sm font-semibold text-[#0052CC] transition hover:bg-[#EEF4FE]"
                         >
-                            <svg className="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <svg className="size-5 shrink-0 text-[#0052CC]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                                <path d="M12 12v9" />
+                                <path d="m16 16-4-4-4 4" />
                             </svg>
                             <span className="truncate">
                                 {addressFile ? addressFile.name : (existingAddress ? '✓ File Uploaded' : 'Choose file')}
@@ -1015,12 +1019,12 @@ function Step6({ draft }: { draft: Draft | null }) {
             </div>
 
             {/* ACTION BAR */}
-            <div className="mt-8 flex items-center justify-between border-t border-slate-200/80 pt-6">
+            <div className="mt-10 flex items-center justify-between border-t border-slate-200/80 pt-6">
                 <Button
                     type="button"
                     variant="outline"
                     onClick={() => router.visit('/prereg/5')}
-                    className="h-11 rounded-xl border-[#0052CC] px-6 text-sm font-semibold text-[#0052CC] hover:bg-blue-50/50"
+                    className="h-11 rounded-xl border border-[#0052CC] bg-white px-7 text-sm font-semibold text-[#0052CC] hover:bg-blue-50/50 transition-colors"
                 >
                     ← Back
                 </Button>
@@ -1029,7 +1033,7 @@ function Step6({ draft }: { draft: Draft | null }) {
                     type="button"
                     onClick={handleContinue}
                     disabled={uploading}
-                    className="h-11 rounded-xl bg-[#0052CC] px-8 text-sm font-semibold text-white shadow transition hover:bg-[#0047B3] active:scale-[0.99] disabled:opacity-50"
+                    className="h-11 rounded-xl bg-[#0052CC] px-9 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:opacity-50"
                 >
                     {uploading ? 'Uploading...' : 'Continue →'}
                 </Button>

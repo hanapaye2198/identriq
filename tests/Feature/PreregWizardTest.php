@@ -119,3 +119,55 @@ test('demographics accepts full personal information fields from design spec', f
         ->and($demo->postal_code)->toBe('121');
 });
 
+test('supporting documents batch upload persists ref_number for all uploaded files', function () {
+    Storage::fake('public');
+    $registrant = Registrant::create([
+        'language' => 'en',
+        'mobile' => '+6757888888',
+        'status' => 'demographics',
+    ]);
+    session(['prereg_id' => $registrant->id]);
+
+    $response = $this->post(route('prereg.documents'), [
+        'batch_mode' => '1',
+        'primary_doc_type' => 'passport',
+        'primary_ref_number' => 'PNG-P-882910',
+        'primary_file' => UploadedFile::fake()->create('primary_passport.pdf', 300, 'application/pdf'),
+        'secondary_doc_type' => 'employment_id',
+        'secondary_ref_number' => 'EMP-2024-991',
+        'secondary_file' => UploadedFile::fake()->create('work_id.png', 200, 'image/png'),
+        'address_doc_type' => 'utility_bill',
+        'address_ref_number' => 'ED-WATER-4592',
+        'address_file' => UploadedFile::fake()->create('water_bill.pdf', 150, 'application/pdf'),
+    ]);
+
+    $response->assertRedirect(route('prereg', ['step' => 7]));
+
+    $docs = $registrant->fresh()->documents;
+    expect($docs->count())->toBe(3);
+
+    $primary = $docs->where('doc_type', 'passport')->first();
+    expect($primary)->not->toBeNull()
+        ->and($primary->ref_number)->toBe('PNG-P-882910')
+        ->and($primary->category)->toBe('identity');
+
+    $secondary = $docs->where('doc_type', 'employment_id')->first();
+    expect($secondary)->not->toBeNull()
+        ->and($secondary->ref_number)->toBe('EMP-2024-991')
+        ->and($secondary->category)->toBe('identity');
+
+    $address = $docs->where('doc_type', 'utility_bill')->first();
+    expect($address)->not->toBeNull()
+        ->and($address->ref_number)->toBe('ED-WATER-4592')
+        ->and($address->category)->toBe('address');
+
+    // Test updating reference number in batch_mode without re-uploading file
+    $this->post(route('prereg.documents'), [
+        'batch_mode' => '1',
+        'primary_doc_type' => 'passport',
+        'primary_ref_number' => 'PNG-P-UPDATED-001',
+    ])->assertRedirect(route('prereg', ['step' => 7]));
+
+    expect($primary->fresh()->ref_number)->toBe('PNG-P-UPDATED-001');
+});
+

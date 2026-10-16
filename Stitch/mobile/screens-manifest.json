@@ -1,0 +1,83 @@
+[
+  {
+    "index": 1,
+    "id": "72aee985f16c42669337ef813a6993b5",
+    "title": "M-01 Mobile Login & Onboarding",
+    "baseName": "M-01-Mobile-Login-Onboarding",
+    "htmlBytes": 23135,
+    "pngBytes": 213958,
+    "status": "COMPLETE"
+  },
+  {
+    "index": 2,
+    "id": "321c849324d84f1bb7d849391571dd5f",
+    "title": "M-02 Citizen Wallet Home",
+    "baseName": "M-02-Citizen-Wallet-Home",
+    "htmlBytes": 0,
+    "pngBytes": 644714,
+    "status": "PARTIAL"
+  },
+  {
+    "index": 3,
+    "id": "fe29f1e0926347afb72484dbdf9c3577",
+    "title": "M-04 Fullscreen Dynamic QR Presenter",
+    "baseName": "M-04-Fullscreen-Dynamic-QR-Presenter",
+    "htmlBytes": 24757,
+    "pngBytes": 299194,
+    "status": "COMPLETE"
+  },
+  {
+    "index": 4,
+    "id": "1dc4d936163649efb013cdcc3af0120a",
+    "title": "M-05 Application Status Tracker",
+    "baseName": "M-05-Application-Status-Tracker",
+    "htmlBytes": 947013,
+    "pngBytes": 40396,
+    "status": "COMPLETE"
+  },
+  {
+    "index": 5,
+    "id": "28de83da87a04a0d9589c62661874298",
+    "title": "M-06 Verifier Camera Scanner",
+    "baseName": "M-06-Verifier-Camera-Scanner",
+    "htmlBytes": 0,
+    "pngBytes": 290823,
+    "status": "PARTIAL"
+  },
+  {
+    "index": 6,
+    "id": "7bd477cc69494ac88a3beacaea7431bf",
+    "title": "M-07 Arm's-Length VALID Verdict",
+    "baseName": "M-07-Arm-s-Length-VALID-Verdict",
+    "htmlBytes": 25068,
+    "pngBytes": 480253,
+    "status": "COMPLETE"
+  },
+  {
+    "index": 7,
+    "id": "ce9a71ae84764ad391298b74b2b1929f",
+    "title": "M-08 Arm's-Length INVALID Verdict",
+    "baseName": "M-08-Arm-s-Length-INVALID-Verdict",
+    "htmlBytes": 17553,
+    "pngBytes": 604092,
+    "status": "COMPLETE"
+  },
+  {
+    "index": 8,
+    "id": "7a6f552baf0b4403bf9dd75a80cc9000",
+    "title": "M-09 Verifier Outbox & History",
+    "baseName": "M-09-Verifier-Outbox-History",
+    "htmlBytes": 23760,
+    "pngBytes": 0,
+    "status": "PARTIAL"
+  },
+  {
+    "index": 9,
+    "id": "30a75ea2dc274388954c77c83b359eb4",
+    "title": "M-03 Digital ID Card Back Flip",
+    "baseName": "M-03-Digital-ID-Card-Back-Flip",
+    "htmlBytes": 0,
+    "pngBytes": 0,
+    "status": "PARTIAL"
+  }
+]

@@ -1,18 +1,22 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { Provider as ReduxProvider } from 'react-redux';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import DemoBar from '@/components/demo-bar';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { store } from '@/lib/store';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
+        const publicPages = ['welcome', 'centers', 'prereg', 'confirmation', 'track', 'verify/offline', 'verify/online'];
         switch (true) {
-            case name === 'welcome':
+            case publicPages.includes(name):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
@@ -25,10 +29,13 @@ void createInertiaApp({
     strictMode: true,
     withApp(app) {
         return (
-            <TooltipProvider delayDuration={0}>
-                {app}
-                <Toaster />
-            </TooltipProvider>
+            <ReduxProvider store={store}>
+                <TooltipProvider delayDuration={0}>
+                    <DemoBar />
+                    {app}
+                    <Toaster />
+                </TooltipProvider>
+            </ReduxProvider>
         );
     },
     progress: {

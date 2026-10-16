@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-error": "#ffffff", "secondary-fixed-dim": "#afcdc6", "surface-container-highest": "#d8e6dd", "ink-primary": "#14201B", "outline": "#6c7a72", "on-tertiary-container": "#5f4a00", "on-tertiary-fixed-variant": "#584400", "error": "#ba1a1a", "inverse-primary": "#3ddfab", "on-primary-fixed-variant": "#00513b", "on-primary-container": "#005840", "secondary": "#48645f", "on-secondary-container": "#4c6863", "primary": "#006c4f", "secondary-fixed": "#cbe9e2", "surface-container-high": "#ddece3", "surface-variant": "#d8e6dd", "error-container": "#ffdad6", "on-secondary-fixed": "#03201c", "glass-overlay": "rgba(14, 42, 38, 0.72)", "on-surface": "#121e19", "on-secondary-fixed-variant": "#314c47", "on-error-container": "#93000a", "status-rework": "#D9822B", "tertiary-fixed-dim": "#ecc246", "on-primary": "#ffffff", "inverse-on-surface": "#e6f4ec", "on-tertiary": "#ffffff", "surface-container-low": "#e9f7ee", "surface-container-lowest": "#ffffff", "surface-paper-subtle": "#EDEAE2", "glass-border": "rgba(255, 255, 255, 0.16)", "outline-variant": "#bbcac1", "surface-container": "#e3f1e9", "primary-fixed": "#62fcc6", "on-primary-fixed": "#002116", "tertiary": "#755b00", "on-secondary": "#ffffff", "surface-dim": "#cfddd5", "secondary-container": "#c8e6df", "inverse-surface": "#27332e", "on-background": "#121e19", "gold-accent": "#C9A227", "ink-secondary": "#4A5A54", "tertiary-container": "#e2b93e", "tertiary-fixed": "#ffe08e", "on-tertiary-fixed": "#241a00", "primary-container": "#2fd6a3", "surface-paper": "#F7F5EF", "background": "#effdf4", "status-error": "#D9383A", "on-surface-variant": "#3c4a43", "surface-tint": "#006c4f", "surface-bright": "#effdf4", "surface": "#effdf4", "primary-fixed-dim": "#3ddfab" }, borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, spacing: { "gutter-mobile": "1rem", "margin": "3rem", "margin-mobile": "1.25rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "gutter": "1.5rem" }, fontFamily: { "headline-sm": ["Newsreader"], "body-sm": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "verdict-banner": ["Plus Jakarta Sans"], "headline-lg": ["Newsreader"], "headline-lg-mobile": ["Newsreader"], "headline-md": ["Newsreader"], "data-mono": ["JetBrains Mono"], "display-hero-mobile": ["Newsreader"], "display-hero": ["Newsreader"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"] }, fontSize: { "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }], "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "verdict-banner": ["48px", { "lineHeight": "52px", "fontWeight": "800" }], "headline-lg": ["36px", { "lineHeight": "44px", "fontWeight": "500" }], "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "500" }], "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }], "data-mono": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "64px", "fontWeight": "600" }], "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }], "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface-paper font-body-md text-ink-primary flex flex-col min-h-screen"><main class="flex-1 flex flex-col relative w-full pt-safe pb-safe bg-surface-paper"><div class="flex flex-col w-full text-ink-primary select-none px-4 py-4 space-y-4">
+<!-- Top Demo Environment Banner & Role Switcher -->
+<div class="w-full bg-surface-paper-subtle rounded-xl p-2.5 flex flex-col gap-2 shadow-sm">
+<div class="flex items-center justify-between text-ink-secondary">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-ping"></span>
+<span class="w-2 h-2 rounded-full bg-primary -ml-3.5"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Demo Simulation Active</span>
+</div>
+<span class="font-data-mono text-xs px-2 py-0.5 rounded-full bg-surface-container text-ink-secondary">v2.4-SGP</span>
+</div>
+<div class="grid grid-cols-2 gap-1.5 bg-surface-container p-1 rounded-lg">
+<button class="py-1.5 px-3 rounded-md text-center font-label-sm text-label-sm transition-all duration-200 bg-primary-container text-ink-primary font-bold shadow-sm" id="role-citizen" onclick="switchRole('citizen')">
+        Citizen Wallet
+      </button>
+<button class="py-1.5 px-3 rounded-md text-center font-label-sm text-label-sm transition-all duration-200 text-ink-secondary hover:text-ink-primary" id="role-verifier" onclick="switchRole('verifier')">
+        Field Verifier
+      </button>
+</div>
+</div>
+<!-- Civic Header & State Emblem -->
+<div class="flex flex-col items-center text-center pt-1 pb-1">
+<div class="relative w-16 h-16 mb-2 rounded-full p-1 bg-surface-container flex items-center justify-center shadow-sm">
+<img alt="identriq National ID Emblem" class="w-full h-full object-contain rounded-full" src="https://lh3.googleusercontent.com/aida/AEtjO1VwrnCxoCNrH_WieODZNNOdMIOCcQ4HHvVNC2SSEJfPk73UCYAS4wekKtH4ZPcKhWgumhyP9f6gYigU1tval6VZBtFsq0IJck1F7rMY9Kg1gsfZX8m6F3M7Wx6rsteta6atJyzk3zBzEBma3Jc8hKB9XWWUc8uPyUEC3BCZmCkTDGCWUFUtR-s0JBXwkdpri661wO08-LcW2Ke3hOj25wSw4wf3T1aWLSFROBulKPxIuA"/>
+<span class="absolute -bottom-1 -right-1 bg-gold-accent text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center text-[10px]">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</span>
+</div>
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold">Independent State of Papua New Guinea</p>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-ink-primary font-headline-sm">identriq Citizen Portal</h1>
+<p class="font-body-sm text-body-sm text-ink-secondary mt-0.5">National Biometric Identity Gateway</p>
+</div>
+<!-- Segmented Identity Access Method Tabs -->
+<div class="w-full bg-surface-paper-subtle p-1 rounded-xl flex items-center shadow-inner">
+<button class="flex-1 py-2 rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-ink-primary font-semibold shadow-sm flex items-center justify-center gap-1.5" id="tab-phone" onclick="selectTab('phone')">
+<span class="material-symbols-outlined text-[18px]">phone_iphone</span>
+      Mobile Number
+    </button>
+<button class="flex-1 py-2 rounded-lg font-label-md text-label-md transition-all duration-200 text-ink-secondary hover:text-ink-primary flex items-center justify-center gap-1.5" id="tab-ref" onclick="selectTab('ref')">
+<span class="material-symbols-outlined text-[18px]">badge</span>
+      Slip / Ref ID
+    </button>
+</div>
+<!-- Primary Interactive Flow Card -->
+<div class="w-full bg-surface-container-lowest rounded-2xl p-4 shadow-sm flex flex-col space-y-4">
+<!-- Tab 1: Phone Auth -->
+<div class="flex flex-col space-y-3.5" id="view-phone">
+<div>
+<label class="block font-label-sm text-label-sm text-ink-secondary mb-1">Registered Citizen Mobile</label>
+<div class="flex items-center bg-surface-paper-subtle rounded-xl px-3 py-2.5 focus-within:bg-surface-container-lowest transition-colors">
+<div class="flex items-center gap-1.5 pr-2.5 mr-2.5 bg-surface-container py-1 px-2 rounded-lg">
+<span class="text-base leading-none">🇵🇬</span>
+<span class="font-data-mono text-ink-primary font-bold text-sm">+675</span>
+</div>
+<input class="w-full bg-transparent font-data-mono text-ink-primary text-base focus:outline-none placeholder-outline tracking-wider" id="phone-input" placeholder="7xxx xxxx" type="tel" value="7123 4567"/>
+<button class="text-outline hover:text-ink-primary p-1" onclick="clearPhone()" type="button">
+<span class="material-symbols-outlined text-sm">cancel</span>
+</button>
+</div>
+</div>
+<!-- Simulated OTP Helper Pill -->
+<div class="bg-surface-paper rounded-xl p-3 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1 text-ink-secondary">
+<span class="material-symbols-outlined text-base text-gold-accent" style="font-variation-settings: 'FILL' 1;">sms</span>
+<span class="font-label-sm text-label-sm font-semibold">One-Time Passcode</span>
+</div>
+<button class="font-data-mono text-xs text-primary font-bold bg-primary-container/30 px-2 py-0.5 rounded hover:bg-primary-container transition-colors" onclick="autofillDemoOTP()" type="button">
+            Tap: 8 4 2 1 9 0
+          </button>
+</div>
+<!-- 6-digit Slot Display -->
+<div class="grid grid-cols-6 gap-1.5 pt-1">
+<input class="otp-box w-full aspect-square text-center font-data-mono text-lg font-bold bg-surface-container-lowest rounded-lg text-ink-primary focus:bg-primary-container/20 focus:text-primary outline-none transition-all shadow-sm" maxlength="1" type="text" value="8"/>
+<input class="otp-box w-full aspect-square text-center font-data-mono text-lg font-bold bg-surface-container-lowest rounded-lg text-ink-primary focus:bg-primary-container/20 focus:text-primary outline-none transition-all shadow-sm" maxlength="1" type="text" value="4"/>
+<input class="otp-box w-full aspect-square text-center font-data-mono text-lg font-bold bg-surface-container-lowest rounded-lg text-ink-primary focus:bg-primary-container/20 focus:text-primary outline-none transition-all shadow-sm" maxlength="1" type="text" value="2"/>
+<input class="otp-box w-full aspect-square text-center font-data-mono text-lg font-bold bg-surface-container-lowest rounded-lg text-ink-primary focus:bg-primary-container/20 focus:text-primary outline-none transition-all shadow-sm" maxlength="1" type="text" value="1"/>
+<input class="otp-box w-full aspect-square text-center font-data-mono text-lg font-bold bg-surface-container-lowest rounded-lg text-ink-primary focus:bg-primary-container/20 focus:text-primary outline-none transition-all shadow-sm" maxlength="1" type="text" value="9"/>
+<input class="otp-box w-full aspect-square text-center font-data-mono text-lg font-bold bg-surface-container-lowest rounded-lg text-ink-primary focus:bg-primary-container/20 focus:text-primary outline-none transition-all shadow-sm" maxlength="1" type="text" value="0"/>
+</div>
+<div class="flex items-center justify-between text-xs text-ink-secondary mt-0.5">
+<span class="flex items-center gap-1 font-body-sm text-xs">
+<span class="material-symbols-outlined text-[13px] text-primary">schedule</span>
+            Resend in <span class="font-data-mono font-bold text-ink-primary" id="cooldown-timer">00:48</span>
+</span>
+<button class="font-label-sm text-xs text-primary font-semibold hover:underline" type="button">Request Voice SMS</button>
+</div>
+</div>
+</div>
+<!-- Tab 2: Appointment Reference (Hidden default) -->
+<div class="hidden flex-col space-y-3" id="view-ref">
+<div>
+<label class="block font-label-sm text-label-sm text-ink-secondary mb-1">Appointment or Enrollment Slip #</label>
+<div class="flex items-center bg-surface-paper-subtle rounded-xl px-3 py-2.5">
+<span class="material-symbols-outlined text-outline mr-2 text-xl">confirmation_number</span>
+<input class="w-full bg-transparent font-data-mono text-ink-primary text-sm focus:outline-none uppercase" placeholder="PNG-NID-2024-XXXX" type="text" value="PNG-NID-2024-8842"/>
+</div>
+</div>
+<p class="font-body-sm text-xs text-ink-secondary">Found at the top-right corner of your official NIRC enrollment registration paper receipt.</p>
+</div>
+<!-- Quick Access Security Setup -->
+<div class="bg-surface-paper-subtle rounded-xl p-3 flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">face</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-ink-primary font-semibold">Enable Biometric Unlock</p>
+<p class="font-body-sm text-[11px] text-ink-secondary">Melanesian Facial Map / Fingerprint</p>
+</div>
+</div>
+<button class="w-11 h-6 rounded-full bg-primary p-0.5 flex items-center transition-colors" id="bio-toggle" onclick="toggleBio()" type="button">
+<span class="w-5 h-5 rounded-full bg-white shadow-sm transform translate-x-5 transition-transform" id="bio-knob"></span>
+</button>
+</div>
+<div class="flex items-center justify-between pt-1 text-xs">
+<span class="font-label-sm text-label-sm text-ink-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">pin</span>
+          Local Security PIN
+        </span>
+<div class="flex gap-1.5 items-center">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="font-data-mono text-[11px] text-ink-secondary ml-1">4 of 6</span>
+</div>
+</div>
+</div>
+<!-- Primary Login Button -->
+<button class="w-full bg-primary-container hover:bg-primary-fixed text-ink-primary font-label-md text-label-md font-bold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98]" id="submit-btn" onclick="handleVerify()" type="button">
+<span class="material-symbols-outlined text-xl">lock_open</span>
+<span>Verify &amp; Access Wallet</span>
+<span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+<!-- Alternative Option: Receipt Scanner -->
+<div class="w-full flex flex-col items-center gap-2 pt-1 pb-2">
+<div class="flex items-center gap-2 w-full px-4">
+<div class="flex-1 h-0.5 bg-surface-paper-subtle rounded-full"></div>
+<span class="font-label-sm text-xs text-ink-secondary uppercase tracking-wider">or fast scan</span>
+<div class="flex-1 h-0.5 bg-surface-paper-subtle rounded-full"></div>
+</div>
+<button class="w-full bg-surface-paper-subtle hover:bg-surface-container text-ink-primary font-label-md text-label-md font-medium py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2" onclick="openScannerToast()" type="button">
+<span class="material-symbols-outlined text-primary text-xl">qr_code_scanner</span>
+<span>Scan Appointment Receipt QR</span>
+</button>
+</div>
+<!-- Institutional Trust Footnote -->
+<div class="w-full bg-surface-container rounded-xl p-3 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-lg mt-0.5" style="font-variation-settings: 'FILL' 1;">shield</span>
+<div class="flex-1">
+<p class="font-label-sm text-xs text-ink-primary font-bold">Encrypted Under National Digital Sovereignty Act</p>
+<p class="font-body-sm text-[11px] text-ink-secondary mt-0.5">Biometrics strictly remain inside the device sovereign enclave and are not shared with overseas servers.</p>
+</div>
+</div>
+<!-- Dynamic Interactive Feedback Snack -->
+<div class="fixed bottom-4 left-4 right-4 bg-ink-primary text-on-primary py-3 px-4 rounded-xl shadow-xl flex items-center justify-between transform translate-y-32 opacity-0 transition-all duration-300 pointer-events-none z-50" id="action-snack">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg" id="snack-icon">check_circle</span>
+<span class="font-body-sm text-xs text-on-primary" id="snack-text">OTP Verified. Initializing Citizen Wallet...</span>
+</div>
+<span class="material-symbols-outlined text-sm opacity-60">east</span>
+</div>
+</div>
+<script>
+  let bioActive = true;
+  let currentRole = 'citizen';
+  let activeTab = 'phone';
+
+  function switchRole(role) {
+    currentRole = role;
+    const btnCitizen = document.getElementById('role-citizen');
+    const btnVerifier = document.getElementById('role-verifier');
+    const submitBtn = document.getElementById('submit-btn');
+
+    if (role === 'citizen') {
+      btnCitizen.className = 'py-1.5 px-3 rounded-md text-center font-label-sm text-label-sm transition-all duration-200 bg-primary-container text-ink-primary font-bold shadow-sm';
+      btnVerifier.className = 'py-1.5 px-3 rounded-md text-center font-label-sm text-label-sm transition-all duration-200 text-ink-secondary hover:text-ink-primary';
+      submitBtn.querySelector('span:nth-child(2)').innerText = 'Verify & Access Wallet';
+      showToast('Switched to Citizen Persona', 'account_circle');
+    } else {
+      btnVerifier.className = 'py-1.5 px-3 rounded-md text-center font-label-sm text-label-sm transition-all duration-200 bg-primary-container text-ink-primary font-bold shadow-sm';
+      btnCitizen.className = 'py-1.5 px-3 rounded-md text-center font-label-sm text-label-sm transition-all duration-200 text-ink-secondary hover:text-ink-primary';
+      submitBtn.querySelector('span:nth-child(2)').innerText = 'Verify & Open Field Console';
+      showToast('Switched to Certified Field Verifier', 'admin_panel_settings');
+    }
+  }
+
+  function selectTab(tab) {
+    activeTab = tab;
+    const tabPhone = document.getElementById('tab-phone');
+    const tabRef = document.getElementById('tab-ref');
+    const viewPhone = document.getElementById('view-phone');
+    const viewRef = document.getElementById('view-ref');
+
+    if (tab === 'phone') {
+      tabPhone.className = 'flex-1 py-2 rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-ink-primary font-semibold shadow-sm flex items-center justify-center gap-1.5';
+      tabRef.className = 'flex-1 py-2 rounded-lg font-label-md text-label-md transition-all duration-200 text-ink-secondary hover:text-ink-primary flex items-center justify-center gap-1.5';
+      viewPhone.classList.remove('hidden');
+      viewRef.classList.add('hidden');
+    } else {
+      tabRef.className = 'flex-1 py-2 rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-ink-primary font-semibold shadow-sm flex items-center justify-center gap-1.5';
+      tabPhone.className = 'flex-1 py-2 rounded-lg font-label-md text-label-md transition-all duration-200 text-ink-secondary hover:text-ink-primary flex items-center justify-center gap-1.5';
+      viewRef.classList.remove('hidden');
+      viewPhone.classList.add('hidden');
+    }
+  }
+
+  function toggleBio() {
+    bioActive = !bioActive;
+    const knob = document.getElementById('bio-knob');
+    const toggle = document.getElementById('bio-toggle');
+    if (bioActive) {
+      knob.classList.remove('translate-x-0.5');
+      knob.classList.add('translate-x-5');
+      toggle.classList.remove('bg-outline-variant');
+      toggle.classList.add('bg-primary');
+      showToast('Biometric unlock enabled', 'fingerprint');
+    } else {
+      knob.classList.remove('translate-x-5');
+      knob.classList.add('translate-x-0.5');
+      toggle.classList.remove('bg-primary');
+      toggle.classList.add('bg-outline-variant');
+      showToast('Biometric unlock disabled', 'lock');
+    }
+  }
+
+  function autofillDemoOTP() {
+    const digits = ['8', '4', '2', '1', '9', '0'];
+    const boxes = document.querySelectorAll('.otp-box');
+    boxes.forEach((box, i) => {
+      box.value = digits[i] || '';
+      box.classList.add('bg-primary-container/30', 'text-primary');
+      setTimeout(() => {
+        box.classList.remove('bg-primary-container/30');
+      }, 500);
+    });
+    showToast('Simulated OTP code injected: 842190', 'key');
+  }
+
+  function clearPhone() {
+    const input = document.getElementById('phone-input');
+    input.value = '';
+    input.focus();
+  }
+
+  function openScannerToast() {
+    showToast('Initializing secure camera scanner...', 'photo_camera');
+  }
+
+  function handleVerify() {
+    const targetName = currentRole === 'citizen' ? 'Citizen Wallet' : 'Field Console';
+    showToast('Authenticating with identriq PKI...', 'verified_user');
+    setTimeout(() => {
+      showToast('Access Granted to ' + targetName, 'task_alt');
+    }, 1200);
+  }
+
+  function showToast(message, iconName) {
+    const snack = document.getElementById('action-snack');
+    const text = document.getElementById('snack-text');
+    const icon = document.getElementById('snack-icon');
+    if (!snack) return;
+
+    text.innerText = message;
+    if (iconName) icon.innerText = iconName;
+
+    snack.classList.remove('translate-y-32', 'opacity-0');
+    snack.classList.add('translate-y-0', 'opacity-100');
+
+    if (window._snackTimer) clearTimeout(window._snackTimer);
+    window._snackTimer = setTimeout(() => {
+      snack.classList.add('translate-y-32', 'opacity-0');
+      snack.classList.remove('translate-y-0', 'opacity-100');
+    }, 2800);
+  }
+
+  // Cooldown countdown tick
+  let seconds = 48;
+  const cooldownElem = document.getElementById('cooldown-timer');
+  setInterval(() => {
+    if (seconds > 0) {
+      seconds--;
+      const formatted = '00:' + (seconds < 10 ? '0' : '') + seconds;
+      if (cooldownElem) cooldownElem.innerText = formatted;
+    }
+  }, 1000);
+
+  // OTP Box Auto-advance
+  const otpInputs = document.querySelectorAll('.otp-box');
+  otpInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+      if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    });
+  });
+</script></main></body></html>

@@ -39,6 +39,13 @@ yarn-error.log
 /.mcp.json
 /AGENTS.md
 /CLAUDE.md
+/Base.md
+/FEATURES.md
+/DESIGN.md
+/BUILD_PROMPT.md
+/MILESTONES.md
+/DEMO.md
+/HANDOFF.md
 /boost.json
 /opencode.json
 /opencode.jsonc

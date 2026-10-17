@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\AuthEvent;
+use App\Models\ConsentRequest;
 use App\Models\Identity;
+use App\Support\ShareScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,16 +37,22 @@ class VerifyController extends Controller
 
     public function check(Request $request): JsonResponse
     {
-        $data = $request->validate(['token' => 'required|string']);
+        $data = $request->validate([
+            'token' => 'required|string',
+            'share' => 'nullable|string|max:255',
+        ]);
+        $share = ShareScope::parse($data['share'] ?? null);
+
         $appointment = Appointment::with('registrant.demographic', 'registrant.identity')
             ->where('qr_token', $data['token'])->first();
 
         if (! $appointment || ! $appointment->registrant->identity) {
-            return response()->json([
+            return response()->json(array_filter([
                 'valid' => false,
                 'state' => 'not_issued',
                 'reason' => 'Unknown token or identity not issued.',
-            ]);
+                'shared' => $share,
+            ], fn ($value) => $value !== null));
         }
 
         $identity = $appointment->registrant->identity;
@@ -66,16 +74,46 @@ class VerifyController extends Controller
             'metadata' => array_filter([
                 'state' => $state,
                 'reason' => $reason,
+                'fields' => $share,
             ]),
         ]);
 
-        return response()->json([
+        $payload = [
             'valid' => $valid,
             'state' => $state,
-            'name' => $appointment->registrant->demographic?->full_name,
-            'biosure' => $identity->biosure_id_number,
             'reason' => $reason,
-        ]);
+        ];
+
+        if ($share === null) {
+            // Legacy full disclosure (name + BioSure) when no scope was carried.
+            $payload['name'] = $appointment->registrant->demographic?->full_name;
+            $payload['biosure'] = $identity->biosure_id_number;
+        } else {
+            $demo = $appointment->registrant->demographic;
+
+            $payload['shared'] = $share;
+            if (in_array('name', $share, true)) {
+                $payload['name'] = $demo?->full_name;
+            }
+            if (in_array('id', $share, true)) {
+                $payload['biosure'] = $identity->biosure_id_number;
+            }
+            if (in_array('id_masked', $share, true)) {
+                $payload['id_masked'] = ShareScope::maskId($identity->biosure_id_number);
+            }
+            if (in_array('dob', $share, true)) {
+                $payload['dob'] = $demo?->dob?->toDateString();
+            }
+            if (in_array('over18', $share, true)) {
+                $payload['over18'] = $demo?->dob ? $demo->dob->age >= 18 : null;
+            }
+            if (in_array('address', $share, true)) {
+                $payload['address'] = $demo?->residential_address;
+            }
+            // 'photo' is a claim flag only — no photo data in the demo (D2).
+        }
+
+        return response()->json($payload);
     }
 
     public function syncOutbox(Request $request): JsonResponse
@@ -87,6 +125,8 @@ class VerifyController extends Controller
             'events.*.at' => 'nullable|date',
             'events.*.purpose' => 'nullable|string|max:100',
             'events.*.reason' => 'nullable|string|max:255',
+            'events.*.fields' => 'nullable|array',
+            'events.*.fields.*' => 'string|in:'.implode(',', ShareScope::FIELDS),
         ]);
 
         $synced = 0;
@@ -102,6 +142,7 @@ class VerifyController extends Controller
                         'checked_at' => $event['at'] ?? null,
                         'purpose' => $event['purpose'] ?? null,
                         'reason' => $event['reason'] ?? null,
+                        'fields' => $event['fields'] ?? null,
                     ]),
                 ]);
                 $synced++;
@@ -139,6 +180,56 @@ class VerifyController extends Controller
     public function online(): Response
     {
         return Inertia::render('verify/online');
+    }
+
+    /**
+     * Online verifier asks the wallet for consent (W6): the public demo page
+     * creates the request, the wallet approves/denies it, this page polls the
+     * status endpoint below. Same demo trade-off as D3 (unauthenticated).
+     */
+    public function requestConsent(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'query' => 'required|string',
+            'verifier_name' => 'required|string|max:120',
+            'purpose' => 'required|string|max:120',
+            'fields' => 'nullable|string|max:255',
+        ]);
+
+        $fields = ShareScope::parse($data['fields'] ?? null) ?? ['name', 'photo', 'over18'];
+
+        $identity = Identity::where('biosure_id_number', $data['query'])
+            ->orWhereHas('registrant.appointments', fn ($q) => $q->where('qr_token', $data['query']))
+            ->first();
+        abort_if(! $identity, 404, 'No identity found.');
+
+        $consent = $identity->consentRequests()->create([
+            'verifier_name' => $data['verifier_name'],
+            'purpose' => $data['purpose'],
+            'fields' => $fields,
+            'status' => 'pending',
+            'expires_at' => now()->addMinutes(2),
+        ]);
+
+        return response()->json([
+            'id' => $consent->id,
+            'status' => $consent->status,
+            'expires_at' => $consent->expires_at->toISOString(),
+        ]);
+    }
+
+    public function consentStatus(ConsentRequest $consent): JsonResponse
+    {
+        if ($consent->status === 'pending' && $consent->expires_at?->isPast()) {
+            $consent->update(['status' => 'expired']);
+        }
+
+        return response()->json([
+            'id' => $consent->id,
+            'status' => $consent->status,
+            'decided_at' => $consent->decided_at?->toISOString(),
+            'expires_at' => $consent->expires_at?->toISOString(),
+        ]);
     }
 
     public function lookup(Request $request): JsonResponse

@@ -2,10 +2,18 @@
 
 use App\Models\Appointment;
 use App\Models\AuthEvent;
+use App\Models\ConsentRequest;
 use App\Models\Identity;
 use Database\Seeders\IdentriqSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
+
+beforeEach(function () {
+    // The route-level `throttle:10,1` keys off sha1(domain|ip); reset it so
+    // attempts from one test never leak into the next.
+    RateLimiter::clear(sha1('|127.0.0.1'));
+});
 
 test('offline check returns verdict and logs event', function () {
     $this->seed(IdentriqSeeder::class);
@@ -94,4 +102,73 @@ test('outbox sync records purpose on the audit event', function () {
     $event = AuthEvent::latest('id')->first();
     expect($event->metadata['purpose'] ?? null)->toBe('Bank onboarding')
         ->and($event->metadata['reason'] ?? null)->toBe('Suspended');
+});
+
+test('scoped offline check discloses only shared fields', function () {
+    $this->seed(IdentriqSeeder::class);
+    $identity = Identity::whereNotNull('biosure_id_number')->first();
+    $token = Appointment::where('registrant_id', $identity->registrant_id)->first()->qr_token;
+
+    $json = $this->postJson(route('verify.check'), ['token' => $token, 'share' => 'name,over18'])
+        ->assertOk()->json();
+
+    expect($json['valid'])->toBeTrue()
+        ->and($json['shared'])->toBe(['name', 'over18'])
+        ->and($json)->toHaveKey('name')
+        ->and($json)->not->toHaveKey('biosure')
+        ->and($json)->not->toHaveKey('id_masked')
+        ->and($json['over18'])->toBeTrue();
+
+    $event = AuthEvent::where('identity_id', $identity->id)->latest('id')->first();
+    expect($event->metadata['fields'])->toBe(['name', 'over18']);
+
+    // Masked ID matches the verifier's mask format; unknown fields abort.
+    $masked = $this->postJson(route('verify.check'), ['token' => $token, 'share' => 'id_masked'])
+        ->assertOk()->json();
+    expect($masked['id_masked'])->toBe('•••• '.substr($identity->biosure_id_number, -4))
+        ->and($masked)->not->toHaveKey('biosure')
+        ->and($masked)->not->toHaveKey('name');
+
+    $this->postJson(route('verify.check'), ['token' => $token, 'share' => 'name,bogus'])
+        ->assertStatus(422);
+});
+
+test('outbox sync records shared fields on the audit event', function () {
+    $this->seed(IdentriqSeeder::class);
+    $token = Appointment::first()->qr_token;
+
+    $this->postJson(route('verify.sync'), ['events' => [
+        ['token' => $token, 'result' => 'valid', 'at' => now()->toISOString(), 'purpose' => 'Bank onboarding', 'fields' => ['name', 'over18']],
+    ]])->assertOk()->assertJson(['synced' => 1]);
+
+    $event = AuthEvent::where('verifier_ref', 'outbox-sync')->latest('id')->first();
+    expect($event->metadata['fields'])->toBe(['name', 'over18']);
+
+    $this->postJson(route('verify.sync'), ['events' => [
+        ['token' => $token, 'result' => 'valid', 'fields' => ['bogus']],
+    ]])->assertStatus(422);
+});
+
+test('online verifier can request consent with a default scope', function () {
+    $this->seed(IdentriqSeeder::class);
+    $identity = Identity::whereNotNull('biosure_id_number')->first();
+
+    $this->postJson(route('verify.consent.create'), [
+        'query' => $identity->biosure_id_number,
+        'verifier_name' => 'Demo Bank eKYC',
+        'purpose' => 'Account opening',
+    ])->assertOk()
+        ->assertJsonPath('status', 'pending')
+        ->assertJsonStructure(['id', 'expires_at']);
+
+    $consent = ConsentRequest::latest('id')->first();
+    expect($consent->identity_id)->toBe($identity->id)
+        ->and($consent->fields)->toBe(['name', 'photo', 'over18'])
+        ->and($consent->expires_at->isFuture())->toBeTrue();
+
+    $this->postJson(route('verify.consent.create'), [
+        'query' => 'nope',
+        'verifier_name' => 'X',
+        'purpose' => 'Y',
+    ])->assertStatus(404);
 });

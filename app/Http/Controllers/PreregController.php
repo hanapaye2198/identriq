@@ -10,6 +10,7 @@ use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -17,6 +18,32 @@ use Inertia\Response;
 
 class PreregController extends Controller
 {
+    public const STANDARD_SLOTS = [
+        ['label' => '8:00 – 8:20 AM', 'time24' => '08:00'],
+        ['label' => '8:20 – 8:40 AM', 'time24' => '08:20'],
+        ['label' => '8:40 – 9:00 AM', 'time24' => '08:40'],
+        ['label' => '9:00 – 9:20 AM', 'time24' => '09:00'],
+        ['label' => '9:20 – 9:40 AM', 'time24' => '09:20'],
+        ['label' => '9:40 – 10:00 AM', 'time24' => '09:40'],
+        ['label' => '10:00 – 10:20 AM', 'time24' => '10:00'],
+        ['label' => '10:20 – 10:40 AM', 'time24' => '10:20'],
+        ['label' => '10:40 – 11:00 AM', 'time24' => '10:40'],
+        ['label' => '11:00 – 11:20 AM', 'time24' => '11:00'],
+        ['label' => '11:20 – 11:40 AM', 'time24' => '11:20'],
+        ['label' => '11:40 – 12:00 PM', 'time24' => '11:40'],
+        ['label' => '1:00 – 1:20 PM', 'time24' => '13:00'],
+        ['label' => '1:20 – 1:40 PM', 'time24' => '13:20'],
+        ['label' => '1:40 – 2:00 PM', 'time24' => '13:40'],
+        ['label' => '2:00 – 2:20 PM', 'time24' => '14:00'],
+        ['label' => '2:20 – 2:40 PM', 'time24' => '14:20'],
+        ['label' => '2:40 – 3:00 PM', 'time24' => '14:40'],
+        ['label' => '3:00 – 3:20 PM', 'time24' => '15:00'],
+        ['label' => '3:20 – 3:40 PM', 'time24' => '15:20'],
+        ['label' => '3:40 – 4:00 PM', 'time24' => '15:40'],
+        ['label' => '4:00 – 4:20 PM', 'time24' => '16:00'],
+        ['label' => '4:20 – 4:40 PM', 'time24' => '16:20'],
+        ['label' => '4:40 – 5:00 PM', 'time24' => '16:40'],
+    ];
     private function current(Request $request): ?Registrant
     {
         $id = $request->session()->get('prereg_id');
@@ -45,11 +72,19 @@ class PreregController extends Controller
             ]);
         }
 
+        $slotData = null;
+        if ($step === 9) {
+            $centerId = $request->integer('center') ?: (RegistrationCenter::where('is_active', true)->first()?->id ?? 1);
+            $tomorrow = Carbon::now()->addDay()->toDateString();
+            $slotData = $this->buildSlotData($centerId, $request->input('date', $tomorrow), $tomorrow, 7);
+        }
+
         return Inertia::render('prereg', [
             'step' => $step,
             'draft' => $draft,
             'demoOtp' => app()->isLocal() ? $request->session()->get('demo_otp') : null,
             'centers' => RegistrationCenter::where('is_active', true)->get(),
+            'initialSlotData' => $slotData,
         ]);
     }
 
@@ -350,6 +385,13 @@ class PreregController extends Controller
             ->count();
         abort_if($dayCount >= $center->daily_capacity, 422, 'Day is fully booked.');
 
+        $slotCapacity = max(2, (int) ceil($center->daily_capacity / 24));
+        $slotCount = Appointment::where('center_id', $center->id)
+            ->where('slot_at', $data['slot_at'])
+            ->where('status', '!=', 'cancelled')
+            ->count();
+        abort_if($slotCount >= $slotCapacity, 422, 'This specific time slot is fully booked. Please select another time slot.');
+
         $appointment = Appointment::create([
             'registrant_id' => $registrant->id,
             'center_id' => $center->id,
@@ -366,5 +408,83 @@ class PreregController extends Controller
             'qrSvg' => $qr->getString(),
             'checklist' => ['Printed or phone confirmation', 'Identity document (original)', 'Address document (original)'],
         ]);
+    }
+
+    public function slots(Request $request): JsonResponse
+    {
+        $centerId = $request->integer('center_id') ?: 1;
+        $tomorrow = Carbon::now()->addDay()->toDateString();
+        $date = $request->input('date', $tomorrow);
+        $days = min(14, max(1, $request->integer('days', 7)));
+        $startDate = $request->input('start_date', $tomorrow);
+
+        $data = $this->buildSlotData($centerId, $date, $startDate, $days);
+
+        return response()->json($data);
+    }
+
+    public function buildSlotData(int $centerId, string $date, string $startDate, int $days = 7): array
+    {
+        $center = RegistrationCenter::find($centerId) ?? RegistrationCenter::where('is_active', true)->first();
+        $dailyCapacity = $center?->daily_capacity ?: 50;
+        $slotCapacity = max(2, (int) ceil($dailyCapacity / 24));
+
+        $start = Carbon::parse($startDate)->startOfDay();
+        $calendar = [];
+        for ($i = 0; $i < $days; $i++) {
+            $cur = $start->copy()->addDays($i);
+            $curDateStr = $cur->toDateString();
+
+            $dayBookings = $center ? Appointment::where('center_id', $center->id)
+                ->whereDate('slot_at', $curDateStr)
+                ->where('status', '!=', 'cancelled')
+                ->count() : 0;
+
+            $availableDaily = max(0, $dailyCapacity - $dayBookings);
+
+            $calendar[] = [
+                'dateStr' => $curDateStr,
+                'dayName' => $cur->format('D'),
+                'formattedDate' => $cur->format('M j, Y'),
+                'slotsCount' => $availableDaily,
+                'isFull' => $availableDaily <= 0,
+            ];
+        }
+
+        $selectedAppointments = $center ? Appointment::where('center_id', $center->id)
+            ->whereDate('slot_at', $date)
+            ->where('status', '!=', 'cancelled')
+            ->get(['slot_at']) : collect();
+
+        $bookedSlots = [];
+        foreach ($selectedAppointments as $app) {
+            $t = Carbon::parse($app->slot_at)->format('H:i');
+            $bookedSlots[$t] = ($bookedSlots[$t] ?? 0) + 1;
+        }
+
+        $slots = [];
+        foreach (self::STANDARD_SLOTS as $slot) {
+            $t24 = $slot['time24'];
+            $bookedCount = $bookedSlots[$t24] ?? 0;
+            $remaining = max(0, $slotCapacity - $bookedCount);
+
+            $slots[] = [
+                'label' => $slot['label'],
+                'time24' => $t24,
+                'total' => $slotCapacity,
+                'booked' => $bookedCount,
+                'available' => $remaining,
+                'isFull' => $remaining <= 0,
+            ];
+        }
+
+        return [
+            'center_id' => $center?->id ?? $centerId,
+            'selected_date' => $date,
+            'daily_capacity' => $dailyCapacity,
+            'slot_capacity' => $slotCapacity,
+            'calendar' => $calendar,
+            'slots' => $slots,
+        ];
     }
 }

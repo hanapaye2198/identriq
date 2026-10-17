@@ -59,4 +59,10 @@ class Identity extends Model
     {
         return $this->hasMany(AuthEvent::class);
     }
+
+    /** @return HasMany<ConsentRequest, $this> */
+    public function consentRequests(): HasMany
+    {
+        return $this->hasMany(ConsentRequest::class);
+    }
 }

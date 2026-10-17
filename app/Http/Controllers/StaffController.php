@@ -173,7 +173,19 @@ class StaffController extends Controller
         $registrant = $appointment->registrant;
 
         if ($request->hasFile('photo')) {
-            $request->file('photo')->store('capture', 'public');
+            $path = $request->file('photo')->store('capture', 'public');
+            if ($registrant->demographic) {
+                $registrant->demographic->update(['photo_path' => $path]);
+            }
+            $registrant->documents()->updateOrCreate(
+                ['category' => 'biometric', 'doc_type' => 'portrait_photo'],
+                [
+                    'path' => $path,
+                    'mime' => $request->file('photo')->getClientMimeType(),
+                    'size' => $request->file('photo')->getSize(),
+                    'verified_status' => 'accepted',
+                ]
+            );
         }
 
         $rejected = 0;

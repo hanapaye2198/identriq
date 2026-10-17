@@ -76,7 +76,9 @@ export default function Capture({
     stats?: StaffStats;
 }) {
     const [photo, setPhoto] = useState<File | null>(null);
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(
+        (appointment.registrant.demographic as { photo_url?: string })?.photo_url || null
+    );
     const [fp, setFp] = useState('FP-PNG-AUTO-CAPTURE');
     const [iris, setIris] = useState('IRIS-PNG-DUAL-OK');
     const [docs, setDocs] = useState<Record<number, { status: string; note: string }>>(

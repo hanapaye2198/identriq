@@ -31,6 +31,7 @@ interface CaseItem {
         gender?: string;
         nationality?: string;
         province?: string;
+        photo_url?: string | null;
     } | null;
     documents: {
         id?: number;
@@ -219,15 +220,23 @@ export default function Validation({
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-3">
-                                                <div
-                                                    className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-                                                        isSelected
-                                                            ? 'bg-[#0052CC] text-white'
-                                                            : 'bg-slate-100 text-slate-700'
-                                                    }`}
-                                                >
-                                                    {initials}
-                                                </div>
+                                                {c.demographic?.photo_url ? (
+                                                    <img
+                                                        src={c.demographic.photo_url}
+                                                        alt={c.demographic.full_name}
+                                                        className="size-10 shrink-0 rounded-xl object-cover border border-slate-200 shadow-xs"
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                                                            isSelected
+                                                                ? 'bg-[#0052CC] text-white'
+                                                                : 'bg-slate-100 text-slate-700'
+                                                        }`}
+                                                    >
+                                                        {initials}
+                                                    </div>
+                                                )}
                                                 <div className="min-w-0">
                                                     <h3 className="truncate text-sm font-bold text-[#0F2644]">
                                                         {c.demographic?.full_name ?? `Applicant #${c.id}`}
@@ -283,18 +292,37 @@ export default function Validation({
                         <div className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
                             {/* Dossier Header */}
                             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-xl font-bold text-[#0F2644]">
-                                            {active.demographic?.full_name ?? `Case #${active.id}`}
-                                        </h2>
-                                        <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-[#0052CC]">
-                                            Case #{active.id}
-                                        </span>
+                                <div className="flex items-center gap-3.5">
+                                    {active.demographic?.photo_url ? (
+                                        <img
+                                            src={active.demographic.photo_url}
+                                            alt={active.demographic.full_name}
+                                            className="size-14 rounded-2xl object-cover border border-slate-200 shadow-xs"
+                                        />
+                                    ) : (
+                                        <div className="flex size-14 items-center justify-center rounded-2xl bg-blue-50 font-bold text-[#0052CC] text-lg">
+                                            {active.demographic?.full_name
+                                                ? active.demographic.full_name
+                                                      .split(' ')
+                                                      .map((n) => n[0])
+                                                      .slice(0, 2)
+                                                      .join('')
+                                                : 'IQ'}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h2 className="text-xl font-bold text-[#0F2644]">
+                                                {active.demographic?.full_name ?? `Case #${active.id}`}
+                                            </h2>
+                                            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-[#0052CC]">
+                                                Case #{active.id}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                            Registered via Pre-registration Portal · National Civil Registry Ingestion
+                                        </p>
                                     </div>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        Registered via Pre-registration Portal · National Civil Registry Ingestion
-                                    </p>
                                 </div>
 
                                 <div className="flex items-center gap-2">

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, router } from '@inertiajs/react';
 
 export interface AppointmentData {
@@ -22,6 +23,17 @@ export default function AppointmentConfirmationCard({
     appointment,
     qrSvg,
 }: AppointmentConfirmationCardProps) {
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                router.visit('/track');
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const slotDate = appointment?.slot_at ? new Date(appointment.slot_at) : new Date();
     const isDateValid = !isNaN(slotDate.getTime());
 
@@ -253,7 +265,7 @@ export default function AppointmentConfirmationCard({
                         href="/track"
                         className="inline-flex items-center gap-2 rounded-lg bg-[#0052CC] px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0047B3] active:scale-[0.99]"
                     >
-                        Finish
+                        Finish (↵ Enter)
                         <svg className="size-4" viewBox="0 0 20 20" fill="currentColor">
                             <path
                                 fillRule="evenodd"

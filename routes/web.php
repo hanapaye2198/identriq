@@ -25,6 +25,7 @@ Route::post('/prereg/demographics', [PreregController::class, 'demographics'])->
 Route::post('/prereg/documents', [PreregController::class, 'documents'])->name('prereg.documents');
 Route::post('/prereg/confirm', [PreregController::class, 'confirm'])->name('prereg.confirm');
 Route::post('/prereg/book', [PreregController::class, 'book'])->name('prereg.book');
+Route::get('/api/prereg/slots', [PreregController::class, 'slots'])->name('api.prereg.slots');
 
 Route::get('/track', [TrackController::class, 'index'])->name('track');
 Route::match(['get', 'post'], '/track/lookup', [TrackController::class, 'lookup'])->name('track.lookup');
@@ -62,6 +63,8 @@ Route::get('/verify/snapshot', [VerifyController::class, 'snapshot'])->name('ver
 Route::get('/verify/online', [VerifyController::class, 'online'])->name('verify.online');
 Route::post('/verify/online/lookup', [VerifyController::class, 'lookup'])->middleware('throttle:10,1')->name('verify.lookup');
 Route::post('/verify/online/biometric', [VerifyController::class, 'biometric'])->middleware('throttle:10,1')->name('verify.biometric');
+Route::post('/verify/online/consent', [VerifyController::class, 'requestConsent'])->middleware('throttle:10,1')->name('verify.consent.create');
+Route::get('/verify/online/consent/{consent}', [VerifyController::class, 'consentStatus'])->name('verify.consent.status');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');

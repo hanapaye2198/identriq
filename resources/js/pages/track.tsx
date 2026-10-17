@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Activity,
     AlertCircle,
@@ -85,12 +85,15 @@ interface TrackProps {
 }
 
 export default function Track({ result }: TrackProps) {
+    const { errors } = usePage().props as unknown as { errors: Record<string, string> };
     const [lookupMode, setLookupMode] = useState<'mobile' | 'token'>('mobile');
     const [mobile, setMobile] = useState('');
     const [qrToken, setQrToken] = useState('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [lookupError, setLookupError] = useState<string | null>(null);
+
+    const displayError = lookupError || errors?.lookup || errors?.mobile || errors?.qr_token;
 
     const handleLookup = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -114,10 +117,15 @@ export default function Track({ result }: TrackProps) {
         setLoading(true);
         router.post('/track/lookup', payload, {
             preserveScroll: true,
-            onError: (errors) => {
+            onSuccess: () => {
+                setLookupError(null);
+            },
+            onError: (errs) => {
                 setLoading(false);
                 setLookupError(
-                    errors.lookup ||
+                    errs.lookup ||
+                        errs.mobile ||
+                        errs.qr_token ||
                         'No registration record found matching your query. Please double check the details and try again.'
                 );
             },
@@ -337,10 +345,10 @@ export default function Track({ result }: TrackProps) {
                         </div>
 
                         {/* Error Message */}
-                        {lookupError && (
+                        {displayError && (
                             <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg p-2.5 max-w-xl">
                                 <AlertCircle className="size-4 shrink-0 text-rose-600" />
-                                <span>{lookupError}</span>
+                                <span>{displayError}</span>
                             </div>
                         )}
 
@@ -661,7 +669,7 @@ export default function Track({ result }: TrackProps) {
                                     <Button
                                         size="sm"
                                         onClick={() => {
-                                            router.visit('/track');
+                                            router.visit('/track?new=1');
                                         }}
                                         className="h-9 gap-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold cursor-pointer"
                                     >

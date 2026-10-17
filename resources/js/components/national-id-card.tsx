@@ -7,8 +7,14 @@ export interface NationalIdCardProps {
     fullName?: string;
     /** Identity number, e.g. "785-3049-921-A" */
     idNumber?: string;
+    /** When set, the ID number badge renders as a tappable reveal control (wallet). */
+    onIdNumberClick?: () => void;
+    /** Hint beside the ID NUMBER label when the badge is tappable, e.g. "Tap to reveal". */
+    idNumberHint?: string;
     dateOfBirth?: string;
     sex?: string;
+    /** Province of residence, e.g. "Central Province". */
+    province?: string | null;
     nationality?: string;
     expiryDate?: string;
     authority?: string;
@@ -26,8 +32,11 @@ export interface NationalIdCardProps {
 export default function NationalIdCard({
     fullName = 'KUMAL, JOHN A.',
     idNumber = '785-3049-921-A',
+    onIdNumberClick,
+    idNumberHint,
     dateOfBirth = '14 APR 1988',
     sex = 'M',
+    province = 'CENTRAL PROVINCE',
     nationality = 'PAPUA NEW GUINEA',
     expiryDate = '24 OCT 2031',
     authority = 'PNG CIVIL REGISTRY',
@@ -51,8 +60,12 @@ export default function NationalIdCard({
     return (
         <div
             className={cn('@container w-full font-sans select-none', className)}
-            role="img"
-            aria-label={`Papua New Guinea National Identity Card for ${fullName}`}
+            role={onIdNumberClick ? undefined : 'img'}
+            aria-label={
+                onIdNumberClick
+                    ? undefined
+                    : `Papua New Guinea National Identity Card for ${fullName}`
+            }
         >
             <div
                 className="relative aspect-[1.586] w-full overflow-hidden rounded-[2.8cqw] text-navy shadow-2xl ring-1 ring-black/15"
@@ -533,16 +546,38 @@ export default function NationalIdCard({
 
                         {/* Right Column: Data Fields & Official Verification Bar */}
                         <div className="flex h-full flex-col justify-between pl-[0.5cqw]">
-                            {/* ID Number Badge (White embossed box) */}
+                            {/* ID Number Badge (White embossed box) — tappable reveal in the wallet */}
                             <div>
-                                <span className="text-[1.3cqw] font-black tracking-[0.16em] text-slate-700 uppercase">
-                                    ID NUMBER:
-                                </span>
-                                <div className="mt-[0.2cqw] inline-block rounded-[1cqw] border border-black/15 bg-white/95 px-[2cqw] py-[0.6cqw] shadow-xs">
-                                    <span className="font-mono text-[3.8cqw] leading-none font-black tracking-[0.05em] text-black">
-                                        {idNumber}
+                                <div className="flex items-baseline justify-between gap-[2cqw]">
+                                    <span className="text-[1.3cqw] font-black tracking-[0.16em] text-slate-700 uppercase">
+                                        ID NUMBER:
                                     </span>
+                                    {onIdNumberClick && idNumberHint && (
+                                        <span className="text-[1.25cqw] font-bold tracking-[0.12em] text-slate-500 uppercase">
+                                            {idNumberHint}
+                                        </span>
+                                    )}
                                 </div>
+                                {onIdNumberClick ? (
+                                    <button
+                                        type="button"
+                                        onClick={onIdNumberClick}
+                                        aria-label={
+                                            idNumberHint ?? 'Toggle ID number'
+                                        }
+                                        className="mt-[0.2cqw] inline-block cursor-pointer rounded-[1cqw] border border-black/15 bg-white/95 px-[2cqw] py-[0.6cqw] shadow-xs active:scale-[0.98]"
+                                    >
+                                        <span className="font-mono text-[3.8cqw] leading-none font-black tracking-[0.05em] text-black">
+                                            {idNumber}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    <div className="mt-[0.2cqw] inline-block rounded-[1cqw] border border-black/15 bg-white/95 px-[2cqw] py-[0.6cqw] shadow-xs">
+                                        <span className="font-mono text-[3.8cqw] leading-none font-black tracking-[0.05em] text-black">
+                                            {idNumber}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Demographic Fields Grid */}
@@ -571,6 +606,15 @@ export default function NationalIdCard({
                                             {nationality}
                                         </span>
                                     </div>
+                                </div>
+
+                                <div>
+                                    <span className="font-medium text-slate-600">
+                                        PROVINCE:{' '}
+                                    </span>
+                                    <span className="uppercase">
+                                        {province || '—'}
+                                    </span>
                                 </div>
 
                                 <div>

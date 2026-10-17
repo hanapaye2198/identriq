@@ -172,3 +172,80 @@ test('supporting documents batch upload persists ref_number for all uploaded fil
 
     expect($primary->fresh()->ref_number)->toBe('PNG-P-UPDATED-001');
 });
+
+test('slots endpoint returns live database capacity and slot availability', function () {
+    $center = RegistrationCenter::create([
+        'name' => 'Capacity Center',
+        'province' => 'NCD',
+        'location' => 'Port Moresby',
+        'daily_capacity' => 48, // slotCapacity = max(2, ceil(48/24)) = 2
+        'is_active' => true,
+    ]);
+
+    $tomorrow = now()->addDay()->toDateString();
+    $slotTime = "{$tomorrow} 09:00:00";
+
+    // 0 bookings initially
+    $response = $this->getJson("/api/prereg/slots?center_id={$center->id}&date={$tomorrow}&start_date={$tomorrow}&days=7");
+    $response->assertOk();
+    $data = $response->json();
+
+    expect($data['daily_capacity'])->toBe(48)
+        ->and($data['slot_capacity'])->toBe(2);
+
+    $slot9am = collect($data['slots'])->firstWhere('time24', '09:00');
+    expect($slot9am['available'])->toBe(2)
+        ->and($slot9am['booked'])->toBe(0)
+        ->and($slot9am['isFull'])->toBeFalse();
+
+    // Create 1 booking for 09:00
+    $reg1 = Registrant::create(['mobile' => '+6757111222', 'status' => 'reviewed', 'language' => 'en']);
+    Appointment::create([
+        'registrant_id' => $reg1->id,
+        'center_id' => $center->id,
+        'slot_at' => $slotTime,
+        'qr_token' => 'token-12345678901234567890123456789012',
+        'status' => 'booked',
+    ]);
+
+    $response2 = $this->getJson("/api/prereg/slots?center_id={$center->id}&date={$tomorrow}&start_date={$tomorrow}&days=7");
+    $slot9amUpdated = collect($response2->json()['slots'])->firstWhere('time24', '09:00');
+    expect($slot9amUpdated['available'])->toBe(1)
+        ->and($slot9amUpdated['booked'])->toBe(1)
+        ->and($slot9amUpdated['isFull'])->toBeFalse();
+
+    // Create 2nd booking to fill the slot capacity (capacity is 2)
+    $reg2 = Registrant::create(['mobile' => '+6757111333', 'status' => 'reviewed', 'language' => 'en']);
+    Appointment::create([
+        'registrant_id' => $reg2->id,
+        'center_id' => $center->id,
+        'slot_at' => $slotTime,
+        'qr_token' => 'token-22345678901234567890123456789012',
+        'status' => 'booked',
+    ]);
+
+    $response3 = $this->getJson("/api/prereg/slots?center_id={$center->id}&date={$tomorrow}&start_date={$tomorrow}&days=7");
+    $slot9amFull = collect($response3->json()['slots'])->firstWhere('time24', '09:00');
+    expect($slot9amFull['available'])->toBe(0)
+        ->and($slot9amFull['booked'])->toBe(2)
+        ->and($slot9amFull['isFull'])->toBeTrue();
+
+    // Booking a 3rd time for the full slot must be rejected with 422
+    $reg3 = Registrant::create(['mobile' => '+6757111444', 'status' => 'reviewed', 'language' => 'en']);
+    session(['prereg_id' => $reg3->id]);
+
+    $failResponse = $this->post(route('prereg.book'), [
+        'center_id' => $center->id,
+        'slot_at' => $slotTime,
+    ]);
+    $failResponse->assertStatus(422);
+
+    // But booking an open slot (e.g. 09:20) succeeds
+    $successResponse = $this->post(route('prereg.book'), [
+        'center_id' => $center->id,
+        'slot_at' => "{$tomorrow} 09:20:00",
+    ]);
+    $successResponse->assertOk();
+    expect(Appointment::where('registrant_id', $reg3->id)->count())->toBe(1);
+});
+

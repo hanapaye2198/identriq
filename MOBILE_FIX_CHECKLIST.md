@@ -41,33 +41,53 @@
 - [x] **`DEMO.md` mobile script** [S] — added (§6).
 - [ ] **Human step before the demo** — run the migration + repopulate one citizen on the dev DB (agent never runs seeders/migrations there).
 
-## 1c — M2: wallet depth (§5.1)
+## 1c — M2: wallet depth (§5.1) — ✅ DONE `2026-10-17` (M2a–M2d shipped; human migration + seed step pending)
 
-- [ ] **W5 — Share (selective disclosure)** [L] — purpose presets → which fields are shared.
-- [ ] **W6 — Consent request (Allow/Deny)** [M].
-- [ ] **W7 — Activity log** [M] — render `AuthEvent` history.
-- [ ] **W4 — Fullscreen QR + 60s countdown** [M] — supersedes the §3 P2 "fullscreen presenter".
-- [ ] **W10 — Notifications** [M] — supersedes the §3 P2 item.
-- [ ] **W11 — Settings basics** [M] — language row, devices, privacy summary, reset.
-- [ ] **V7 — History + filters** [M] verifier — outbox done in F1; history still open.
+> Goal: run the §5.4 story exactly as written — wallet W5 share → scoped QR → verifier shows only the shared fields; W6 consent approved from a real `/verify/online` request; W7 shows both checks + the consent. Plus W4 / W10 / W11 and verifier V7.
+> ⚠️ Human step unchanged and now doubly required: `rtk php artisan migrate` (runs M1 `000005` + M2 `000006`). The agent never runs it.
 
-## 2 — P1: quick wins + spec polish
+**Decisions — ✅ accepted as-is (user go given `2026-10-17`)**
 
-- [ ] **Resend cooldown 60s** [S] `m/link.tsx` (spec §2.1) — disable "Send code" with a countdown.
-- [ ] **Masked BIOSURE ID, tap to reveal** [S–M] `components/national-id-card.tsx` + `m/wallet.tsx` (spec §3.1).
-- [ ] **Lifecycle status pill** [S] `m/wallet.tsx` (spec §3.1) — mint `Approved & Active` / amber `Validating` / teal `Card Dispatched`.
-- [ ] **DOB fix** [S] — gated on **D1**.
-- [ ] **Portrait handling** [S] — gated on **D2**.
+- **D5 — selective disclosure format** [S]: the scope rides the QR / paste code (`<token>|share=name,over18,…`); `check()` + `syncOutbox()` accept it, filter the response (name · ID masked vs full · DOB vs "over 18" · address · photo) and record `fields` in `AuthEvent.metadata`. HMAC stays simulated. Alt: wallet-side preview only — rejected (theater).
+- **D6 — consent origin** [S]: real beat — `/verify/online` gains "Request consent" after lookup (verifier name + purpose, 2-min expiry), wallet shows the incoming request (Allow / Deny + countdown), online page polls status. Wallet demo-control fallback button for rehearsal. Alt: wallet-only simulation.
+- **D7 — navigation** [S]: keep the 2-tab `/m` shell; wallet gets an internal segmented nav (Home · Share · Activity · Settings, W3 quick actions), verifier gets Scan · History (V7). Alt: restructure to the spec's 4-tabs-per-app — rejected (churn, breaks M1 stability).
+- **D8 — activity source** [S]: `AuthEvent` (same as audit §3.4); filters **All / Shared** (valid + consent allowed) **/ Denied** (invalid + consent denied). No new table.
+
+**Batches**
+
+- [x] **M2a — backend** [M–L] — migration `2026_10_17_000006_create_consent_requests_table.php` (written, not run; soft deletes) + `ConsentRequest` model; routes (auth:sanctum): `GET /api/mobile/consent/pending`, `POST /api/mobile/consent/{id}/decide`, `GET /api/mobile/activity`, `GET + DELETE /api/mobile/devices`; scope param on `qrPayload` / `qrSvg` / `check` / `syncOutbox`; public `/verify/online` consent create + status poll (throttled; same demo trade-off as D3). Tests: pending → allow → activity row; deny; expiry; devices; scoped check + metadata `fields`; scope whitelist validation. — ✅ `2026-10-17`: shipped as planned; QR sig now covers the scope (`token|issued_at|share`); `ShareScope` whitelist lives in `app/Support/ShareScope.php`. Evidence: scoped 25/25, full suite 83/83 (413 assertions).
+- [x] **M2b — wallet UI (§5.1)** [L] — W3 quick actions row; W4 fullscreen presenter (scoped QR, 60 s countdown + refresh, masked ID, "Works offline", Wake Lock guarded); W5 purpose presets (Bank · Police · Telco · Clinic · Custom) + field toggles (Name / Photo / DOB **or** Over-18 / ID masked-vs-full / Address) with "verifier will see" summary; W7 activity view + filters; W10 notifications via header bell (unread dot); W11 settings (language rows, linked devices + remove, privacy summary, local demo reset). Wallet reads move onto the Redux Toolkit `api` slice (RTK Query endpoints + bearer header in `prepareHeaders`) while these paths are being touched — per AGENTS.md §2. — ✅ `2026-10-17`: shipped as planned — 6 wallet components (`resources/js/components/wallet/`: `share-scope`, `datetime`, `share-presenter`, `share-view`, `activity-view`, `settings-view`), `wallet.tsx` rewrite (segmented nav Home·Share·Activity·Settings + header bell + consent/credential banners), `verify/online.tsx` consent panel (D6, 3 s poll) , `csrf.ts` + meta tag, `link.tsx` resets API cache on a fresh link. All wallet reads now via the Redux Toolkit `api` slice (11 endpoints / 9 tagTypes). Unrelated generated-code tsc skew fixed: `laravel/wayfinder` v0.1.21 → v0.1.23 (`composer.lock` only) + regenerated actions/routes. Evidence: `types:check` clean (twice, incl. post-build) · `vp build` pass · scoped 25/25 (139 assertions) · full suite 87/87 (478 assertions) · Pint clean.
+- [x] **M2c — verifier V7** [M] — `verify_history` localStorage log (every verdict incl. not-issued / tampered; `synced` flips on outbox sync) + Scan · History segmented nav + filters (All / Valid / Invalid / Pending-sync); Reset device clears it. Stays local-first (offline-first exception, documented in code). — ✅ `2026-10-17`: shipped as planned — share code parsed client-side (`<token>|share=…` sanitized against `SHARE_FIELDS` before it can reach sync), scoped verdict (name · full-vs-masked ID only when shared; "Shared by holder: …" chips), outbox `fields` recorded for valid verdicts only, history capped at 50 entries, sync flips unsynced → `synced`, Reset device clears lists + outbox + history. Evidence: `types:check` clean · scoped `vp check` clean (all 12 M2 files; M2b-file formatting debt — incl. `verify/online.tsx`, which my first scoped runs mis-pathed — fixed by scoped `--fix`) · `vp build` pass · scoped 25/25 (139 assertions) · full suite 88/88 (493 assertions).
+- [x] **M2d — story + docs** [S] — DEMO.md §6 extended to the full §5.4 beats; close superseded §3 items (fullscreen presenter, notification center); full suite + scoped `vp check` + `types:check`; evidence report + proposed commit messages (never commit). — ✅ `2026-10-17`: `DEMO.md` §6 rewritten as the 7-beat rehearsal loop (scoped Bank share → offline scoped verdict → report-lost → staleness → sync → `/verify/online` consent → activity/history) — `DEMO.md` is git-ignored (`.gitignore:47`), so it stays a local presenter doc; §3 superseded items closed (notification center → W10 bell panel · fullscreen presenter → W4 `share-presenter`). Evidence: full suite 88/88 (493 assertions) · scoped `vp check` clean (12 M2 files + `DEMO.md` + this checklist) · `types:check` clean. Evidence report + proposed commit messages delivered in-session as text only — nothing staged or committed (AGENTS.md §4.1).
+- [ ] **Out of scope for M2**: W2 app lock, W8 in-app status, V1 pairing, V9 verifier settings, language-switcher logic, haptics, camera, Ed25519.
+
+**Open sub-questions (defaults apply unless vetoed)**
+
+- W5 preset defaults = the minimum: Bank · name + over-18 + masked ID; Police · name + DOB + full ID; Telco · name + masked ID; Clinic · name + DOB; Custom · free toggles.
+- Consent expiry 2 min · wallet pending poll every 5 s · verifier poll every 3 s.
+- W4 entry from Home defaults to the minimal scope (name + over-18 + masked ID; photo is the placeholder silhouette).
+
+## 2 — P1: quick wins + spec polish — ✅ DONE `2026-10-17` (browser E2E still pending the human migration)
+
+- [x] **Resend cooldown 60s** [S] `m/link.tsx` (spec §2.1) — ✅ `2026-10-17`: "Send code" disables while in flight and shows "Resend in Ns" for 60 s after a successful send; an unknown number stays retryable (no cooldown); a dead network shows a plain-language error instead of an unhandled rejection.
+- [x] **Masked BIOSURE ID, tap to reveal** [S–M] `components/national-id-card.tsx` + `m/wallet.tsx` (spec §3.1) — ✅ `2026-10-17`: card front + back MRZ render `•••• 4821` until the holder taps the badge itself ("Tap to reveal / Tap to hide" hint); the card flip moved to an explicit caption button under the card (the reveal target cannot nest inside the old whole-card flip button); admin issuance keeps the static full-ID badge (`onIdNumberClick` opt-in).
+- [x] **Lifecycle status pill** [S] `m/wallet.tsx` (spec §3.1) — ✅ `2026-10-17`: mint `Approved & Active` · amber `Validating` (identity pending) · teal `Card Dispatched` (registrant `issued`, i.e. personalized → not yet delivered); red Suspended / Revoked / Failed + grey Not issued preserved.
+- [x] **DOB fix** [S] — ✅ closed by **D1** (§1): `formatCardDate` (wallet + admin issuance) + PNG-Moresby MRZ dates; duplicate row, no separate work.
+- [x] **Portrait handling** [S] — ✅ closed by **D2** (§1): neutral-silhouette default + `onError` fallback; duplicate row, no separate work.
+
+> P1 evidence: `types:check` clean · scoped `vp check` clean on the 3 touched files (formatted + linted) · `vp build` pass (wallet 43.72 kB · link 2.68 kB) · full suite 88/88 (493 assertions). No backend touched.
 
 ## 3 — P2: web-feasible spec features
 
-- [ ] **Notification center in wallet** [M] (spec §3.4) — render the already-returned `notifications` (icon, title, time).
-- [ ] **Appointment slip** [M] (spec §3.3) — expose center/date/slot + "What to Bring" via `/api/me/identity`; wallet section.
-- [ ] **Province on card** [S] (spec §3.1) — add `province` to API + card prop.
+- [x] **Notification center in wallet** [M] (spec §3.4) — ✅ `2026-10-17` (M2b, W10): header bell + unread dot opens a panel rendering the returned `notifications` (title, body, time; up to 8; read-state via `wallet_notifications_seen_at`).
+- [x] **Appointment slip** [M] (spec §3.3) — ✅ `2026-10-17`: `/api/me/identity` gains an `appointment` object (center · center_location · center_province · slot_at ISO · reference · status; latest by `created_at`, via eager-loaded `appointments.center`); new `resources/js/components/wallet/appointment-slip.tsx` renders after the quick actions — center + address, slot as `Fri, 24 Oct 2026 · 09:30` in `Pacific/Port_Moresby`, client-side "What to Bring" checklist, appointment-code footer.
+- [x] **Province on card** [S] (spec §3.1) — ✅ `2026-10-17`: `NationalIdCard` gains a `province` prop (default `CENTRAL PROVINCE`) + a `PROVINCE:` row under sex/nationality; wallet passes `card.province ?? '—'`, admin issuance passes `item.registrant.demographic?.province ?? '—'` (the API already carried `province`/`photo_url` from M2). The landing 3D card renders via the same default, so it needed no edit — its file stays untouched.
 - [x] **Offline snapshot on `/m/verify`** [M–L] (spec §4.4) — done with §1b `2026-10-17`: `/verify/snapshot` → `verify_lists` localStorage cache; verdicts evaluated locally (same result offline); sync = push outbox + refresh lists.
-- [ ] **Fullscreen QR presenter** [M] (spec §3.2) — fullscreen white QR + Screen Wake Lock. Note: browser brightness control is not possible; fullscreen + white is the substitute.
-- [ ] **Option B: appointment ref / QR-token input** [M] (spec §2.1) — link by token, then OTP to the registered mobile.
-- [ ] **OTP auto-focus boxes** [S–M] (spec §2.1) — 6-cell input component.
+- [x] **Fullscreen QR presenter** [M] (spec §3.2) — ✅ `2026-10-17` (M2b, W4): fullscreen white QR in `share-presenter.tsx` — 60 s countdown + refresh, masked ID, "Works offline", Wake Lock guarded. Browser brightness control is still not possible; fullscreen + white remains the substitute.
+- [x] **Option B: appointment ref / QR-token input** [M] (spec §2.1) — ✅ `2026-10-17`: `/api/mobile/otp` + `/api/mobile/link` accept `token` (`required_without:mobile`); the token resolves the registrant through `Appointment.qr_token` — pasted QR URLs and wallet `<token>|share=…` codes are normalized to the bare token. The OTP still goes to the registered mobile (single-use; same `otp:{mobile}` key for both flows) and `otp()` now returns a masked `mobile_hint` ("+675 ••• 013"). `m/link.tsx` gains a Mobile number / Appointment code toggle. Tests: token→otp→link happy path, pasted QR URL, unknown-token 404, `mobile_hint` shape.
+- [x] **OTP auto-focus boxes** [S–M] (spec §2.1) — ✅ `2026-10-17`: the 6-digit code uses the existing shadcn `InputOTP` (3+3 groups, `size-11` slots, digits-only pattern, focus auto-advances per keypress); no auto-submit by design — `Enter` submits through the wrapping `<form>`. Error copy: "Too many attempts — wait a minute and try again." (429) · "We couldn't find that appointment code." (token 404) · "Unknown mobile number." (mobile 404).
+
+> P2 evidence `2026-10-17`: `types:check` clean · scoped `vp check` clean (6 files) · `vp build` pass (`link` chunk 4.41 kB) · full suite **91/91 (547 assertions)** — incl. 2 new token-flow tests + the extended `identity` structure (`province`, `photo_url`, `appointment.*`). Browser E2E still pending the human migration + a repopulated citizen.
 
 ## 4 — P3: stretch / native-grade (big lifts)
 

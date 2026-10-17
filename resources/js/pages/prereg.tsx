@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +49,32 @@ interface Draft {
     demographic?: Demographic | null;
     documents?: { id: number; category: string; doc_type: string; ref_number?: string | null; verified_status: string }[];
     appointments?: Appointment[];
+}
+
+export interface CalendarDay {
+    dateStr: string;
+    dayName: string;
+    formattedDate: string;
+    slotsCount: number;
+    isFull: boolean;
+}
+
+export interface TimeSlotItem {
+    label: string;
+    time24: string;
+    total: number;
+    booked: number;
+    available: number;
+    isFull: boolean;
+}
+
+export interface SlotData {
+    center_id: number;
+    selected_date: string;
+    daily_capacity: number;
+    slot_capacity: number;
+    calendar: CalendarDay[];
+    slots: TimeSlotItem[];
 }
 
 const TITLES = [
@@ -131,27 +157,48 @@ function Shell({ step, children }: { step: number; children: React.ReactNode }) 
 }
 
 function Step1() {
+    function submitEnglish() {
+        router.post('/prereg/language', { language: 'en' });
+    }
+
+    useEffect(() => {
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitEnglish();
+            }
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     return (
-        <div className="mx-auto max-w-2xl">
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                submitEnglish();
+            }}
+            className="mx-auto max-w-2xl"
+        >
             <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Select your language</h2>
             <p className="mt-1 text-sm text-[#14201B]/70">
                 Choose the language you would like to complete your pre-registration with.
             </p>
             <div className="mt-6 grid gap-3">
                 <Button
-                    onClick={() => router.post('/prereg/language', { language: 'en' })}
+                    type="submit"
                     className="h-12 justify-between rounded-xl bg-[#0052CC] px-5 text-base font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99]"
                 >
                     <span>English</span>
-                    <span className="text-xs uppercase tracking-wider opacity-90">Continue →</span>
+                    <span className="text-xs uppercase tracking-wider opacity-90">Continue (↵ Enter)</span>
                 </Button>
                 {['Tok Pisin — coming soon', 'Hiri Motu — coming soon'].map((l) => (
-                    <Button key={l} disabled variant="outline" className="h-12 justify-start rounded-xl border border-slate-200 bg-slate-50/80 px-5 text-left text-sm text-slate-400">
+                    <Button key={l} disabled variant="outline" type="button" className="h-12 justify-start rounded-xl border border-slate-200 bg-slate-50/80 px-5 text-left text-sm text-slate-400">
                         {l}
                     </Button>
                 ))}
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -162,6 +209,7 @@ function Step2() {
     const [captchaFailed, setCaptchaFailed] = useState(false);
     const [refreshingCaptcha, setRefreshingCaptcha] = useState(false);
     const loaded = useRef(false);
+    const captchaRef = useRef<HTMLInputElement | null>(null);
     const { errors } = usePage().props as unknown as { errors: Record<string, string> };
 
     async function loadCaptcha() {
@@ -200,8 +248,18 @@ function Step2() {
 
     const digitsOnly = mobile.replace(/\D/g, '').replace(/^675/, '');
 
+    function handleSubmit(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        if (digitsOnly.length !== 7) return;
+        if (!captchaInput) {
+            captchaRef.current?.focus();
+            return;
+        }
+        router.post('/prereg/mobile', { mobile, captcha: captchaInput });
+    }
+
     return (
-        <div className="mx-auto max-w-2xl">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-2xl">
             <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Your mobile number</h2>
             <p className="mt-1 text-sm text-[#14201B]/70">
                 We will send an SMS verification code to confirm your contact number.
@@ -214,8 +272,17 @@ function Step2() {
                             id="mobile"
                             value={mobile}
                             onChange={(e) => onMobile(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    if (digitsOnly.length === 7 && !captchaInput) {
+                                        e.preventDefault();
+                                        captchaRef.current?.focus();
+                                    }
+                                }
+                            }}
                             inputMode="tel"
                             maxLength={11}
+                            autoFocus
                             className="h-12 font-mono text-base tracking-wider"
                             placeholder="+6757XXXXXXX"
                         />
@@ -243,6 +310,7 @@ function Step2() {
                             {refreshingCaptcha ? '...' : (challenge || (captchaFailed ? 'ERR' : '...'))}
                         </code>
                         <Input
+                            ref={captchaRef}
                             id="captcha"
                             value={captchaInput}
                             onChange={(e) => setCaptchaInput(e.target.value.toUpperCase())}
@@ -256,14 +324,14 @@ function Step2() {
                 </div>
 
                 <Button
-                    onClick={() => router.post('/prereg/mobile', { mobile, captcha: captchaInput })}
+                    type="submit"
                     disabled={digitsOnly.length !== 7 || !captchaInput}
                     className="mt-2 h-12 rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
                 >
-                    Send Verification Code (OTP)
+                    Send Verification Code (OTP) (↵ Enter)
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -285,8 +353,14 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
         });
     }
 
+    function verify(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        if (otp.length !== 6) return;
+        router.post('/prereg/otp/verify', { otp });
+    }
+
     return (
-        <div className="mx-auto max-w-2xl">
+        <form onSubmit={verify} className="mx-auto max-w-2xl">
             <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Enter the 6-digit code</h2>
             <p className="mt-1 text-sm text-[#14201B]/70">
                 A verification code was sent to your mobile. Enter the 6 digits below.
@@ -303,21 +377,28 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
                 <div>
                     <Input
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setOtp(val);
+                            if (val.length === 6) {
+                                router.post('/prereg/otp/verify', { otp: val });
+                            }
+                        }}
                         maxLength={6}
                         inputMode="numeric"
                         placeholder="••••••"
+                        autoFocus
                         className="h-14 text-center font-mono text-3xl font-bold tracking-widest text-[#0F2644] border-slate-300"
                     />
                     {errors.otp && <p className="mt-1.5 text-center text-sm font-medium text-red-600">{errors.otp}</p>}
                 </div>
 
                 <Button
-                    onClick={() => router.post('/prereg/otp/verify', { otp })}
+                    type="submit"
                     disabled={otp.length !== 6}
                     className="h-12 rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
                 >
-                    Verify & Continue
+                    Verify & Continue (↵ Enter)
                 </Button>
 
                 <div className="text-center">
@@ -331,7 +412,7 @@ function Step3({ demoOtp }: { demoOtp: string | null }) {
                     </button>
                 </div>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -339,8 +420,28 @@ function Step4() {
     const [scrolled, setScrolled] = useState(false);
     const [agreed, setAgreed] = useState(false);
 
+    function submit(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        if (!agreed) {
+            setAgreed(true);
+            return;
+        }
+        router.post('/prereg/consent', { accept: true });
+    }
+
+    useEffect(() => {
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submit();
+            }
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [agreed]);
+
     return (
-        <div className="mx-auto max-w-2xl">
+        <form onSubmit={submit} className="mx-auto max-w-2xl">
             <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Consent Statement</h2>
             <p className="mt-1 text-sm text-[#14201B]/70">
                 Please review the terms of biometric collection and civic identity protection.
@@ -386,13 +487,13 @@ function Step4() {
             </label>
 
             <Button
+                type="submit"
                 disabled={!scrolled && !agreed}
-                onClick={() => router.post('/prereg/consent', { accept: true })}
                 className="mt-6 h-12 w-full rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
             >
-                Agree & Continue
+                Agree & Continue (↵ Enter)
             </Button>
-        </div>
+        </form>
     );
 }
 
@@ -436,8 +537,63 @@ function Step5({ draft }: { draft: Draft | null }) {
         });
     }
 
+    function handleSubmit(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        router.post('/prereg/demographics', f);
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLFormElement>) {
+        if (e.key === 'Enter') {
+            const target = e.target as HTMLElement;
+            if (e.ctrlKey || e.metaKey || target.getAttribute('type') === 'submit') {
+                e.preventDefault();
+                handleSubmit();
+                return;
+            }
+
+            if (target.tagName === 'INPUT') {
+                const isFormComplete = Boolean(
+                    f.given_name.trim() &&
+                    f.family_name.trim() &&
+                    f.dob &&
+                    f.gender &&
+                    f.nationality &&
+                    f.mobile.trim() &&
+                    f.province &&
+                    f.district &&
+                    f.llg.trim() &&
+                    f.ward.trim() &&
+                    f.residential_address.trim()
+                );
+
+                if (isFormComplete) {
+                    e.preventDefault();
+                    handleSubmit();
+                    return;
+                }
+
+                e.preventDefault();
+                const form = e.currentTarget;
+                const inputs = Array.from(
+                    form.querySelectorAll<HTMLInputElement>(
+                        'input:not([type="hidden"]):not([disabled])',
+                    ),
+                );
+                const currentIndex = inputs.indexOf(target as HTMLInputElement);
+                if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+                    const nextEmpty =
+                        inputs.slice(currentIndex + 1).find((i) => !i.value.trim()) ||
+                        inputs[currentIndex + 1];
+                    nextEmpty?.focus();
+                } else {
+                    handleSubmit();
+                }
+            }
+        }
+    }
+
     return (
-        <div>
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
             <div>
                 <h2 className="text-2xl font-bold tracking-tight text-[#0F2644] sm:text-3xl">Personal Information</h2>
                 <p className="mt-1 text-sm text-[#475569]">
@@ -720,14 +876,14 @@ function Step5({ draft }: { draft: Draft | null }) {
             {/* ACTION BAR */}
             <div className="mt-8 flex justify-end border-t border-slate-200/80 pt-6">
                 <Button
-                    onClick={() => router.post('/prereg/demographics', f)}
+                    type="submit"
                     className="h-12 w-full rounded-xl bg-[#0052CC] px-8 text-base font-semibold text-white shadow transition hover:bg-[#0047B3] active:scale-[0.99] sm:w-auto"
                 >
-                    <span>Continue</span>
+                    <span>Continue (↵ Enter)</span>
                     <span className="ml-2">→</span>
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -761,7 +917,8 @@ function Step6({ draft }: { draft: Draft | null }) {
 
     const hasPrimaryUploaded = Boolean(existingPrimary || primaryFile);
 
-    function handleContinue() {
+    function handleContinue(e?: React.FormEvent) {
+        if (e) e.preventDefault();
         setClientError('');
 
         const hasAnyNewFiles = Boolean(primaryFile || secondaryFile || addressFile);
@@ -803,8 +960,32 @@ function Step6({ draft }: { draft: Draft | null }) {
         });
     }
 
+    useEffect(() => {
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                if (hasPrimaryUploaded) {
+                    e.preventDefault();
+                    handleContinue();
+                }
+            }
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [
+        hasPrimaryUploaded,
+        primaryFile,
+        primaryType,
+        primaryRef,
+        secondaryFile,
+        secondaryType,
+        secondaryRef,
+        addressFile,
+        addressType,
+        addressRef,
+    ]);
+
     return (
-        <div>
+        <form onSubmit={handleContinue}>
             {/* Header + Info Callout */}
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div>
@@ -1033,15 +1214,14 @@ function Step6({ draft }: { draft: Draft | null }) {
                 </Button>
 
                 <Button
-                    type="button"
-                    onClick={handleContinue}
+                    type="submit"
                     disabled={uploading}
                     className="h-11 rounded-xl bg-[#0052CC] px-9 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
                 >
-                    {uploading ? 'Uploading...' : 'Continue →'}
+                    {uploading ? 'Uploading...' : 'Continue (↵ Enter) →'}
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -1051,14 +1231,31 @@ function Step7({ draft }: { draft: Draft | null }) {
 
     const fullName = d.full_name || [d.given_name, d.middle_name, d.family_name].filter(Boolean).join(' ');
 
+    function handleConfirm(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        router.post('/prereg/confirm');
+    }
+
+    useEffect(() => {
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleConfirm();
+            }
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     return (
-        <div>
+        <form onSubmit={handleConfirm}>
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight text-[#0E2A26]">Review Application</h2>
                     <p className="mt-1 text-sm text-[#14201B]/70">Confirm your personal details and uploaded documents.</p>
                 </div>
                 <Button
+                    type="button"
                     onClick={() => router.visit('/prereg/5')}
                     variant="outline"
                     className="h-8 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-[#0052CC] hover:bg-blue-50/50 hover:border-[#0052CC] shadow-xs transition-colors"
@@ -1134,6 +1331,7 @@ function Step7({ draft }: { draft: Draft | null }) {
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Button
+                    type="button"
                     onClick={() => router.visit('/prereg/5')}
                     variant="outline"
                     className="h-12 flex-1 rounded-xl border border-slate-300 bg-white font-semibold text-[#0F2644] hover:bg-slate-50 hover:border-slate-400 shadow-xs transition-colors"
@@ -1141,13 +1339,13 @@ function Step7({ draft }: { draft: Draft | null }) {
                     ← Back to Details
                 </Button>
                 <Button
-                    onClick={() => router.post('/prereg/confirm')}
+                    type="submit"
                     className="h-12 flex-1 rounded-xl bg-[#0052CC] font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99]"
                 >
-                    Confirm & Select Center (Step 8) →
+                    Confirm & Select Center (Step 8) (↵ Enter) →
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -1237,8 +1435,30 @@ function Step8({
         .map((c) => ({ id: c.id, name: c.name, lat: c.latitude as number, lng: c.longitude as number }));
 
 
+    function handleContinue(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        const targetId = (filtered.length === 1 ? filtered[0].id : selectedId) || items[0]?.id;
+        if (targetId) {
+            router.visit(`/prereg/9?center=${targetId}`);
+        }
+    }
+
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                const tag = (document.activeElement?.tagName || '').toLowerCase();
+                if (tag !== 'textarea') {
+                    e.preventDefault();
+                    handleContinue();
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedId, filtered, items]);
+
     return (
-        <div>
+        <form onSubmit={handleContinue}>
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold tracking-tight text-[#0F2644] sm:text-3xl">Select a Registration Center</h2>
@@ -1380,57 +1600,66 @@ function Step8({
                 </Button>
 
                 <Button
-                    type="button"
-                    onClick={() => router.visit(`/prereg/9?center=${selectedId}`)}
-                    disabled={!selectedId}
+                    type="submit"
+                    disabled={!selectedId && filtered.length === 0}
                     className="h-11 rounded-xl bg-[#0052CC] px-9 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
                 >
-                    Continue →
+                    Continue (↵ Enter) →
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
 
-const TIME_SLOTS = [
-    { label: '8:00 – 8:20 AM', time24: '08:00', slots: 6 },
-    { label: '8:20 – 8:40 AM', time24: '08:20', slots: 6 },
-    { label: '8:40 – 9:00 AM', time24: '08:40', slots: 6 },
-    { label: '9:00 – 9:20 AM', time24: '09:00', slots: 6 },
-    { label: '9:20 – 9:40 AM', time24: '09:20', slots: 6 },
-    { label: '9:40 – 10:00 AM', time24: '09:40', slots: 6 },
-    { label: '10:00 – 10:20 AM', time24: '10:00', slots: 6 },
-    { label: '10:20 – 10:40 AM', time24: '10:20', slots: 6 },
-    { label: '10:40 – 11:00 AM', time24: '10:40', slots: 6 },
-    { label: '11:00 – 11:20 AM', time24: '11:00', slots: 6 },
-    { label: '11:20 – 11:40 AM', time24: '11:20', slots: 6 },
-    { label: '11:40 – 12:00 PM', time24: '11:40', slots: 6 },
-    { label: '1:00 – 1:20 PM', time24: '13:00', slots: 6 },
-    { label: '1:20 – 1:40 PM', time24: '13:20', slots: 6 },
-    { label: '1:40 – 2:00 PM', time24: '13:40', slots: 6 },
-    { label: '2:00 – 2:20 PM', time24: '14:00', slots: 6 },
-    { label: '2:20 – 2:40 PM', time24: '14:20', slots: 6 },
-    { label: '2:40 – 3:00 PM', time24: '14:40', slots: 6 },
-    { label: '3:00 – 3:20 PM', time24: '15:00', slots: 6 },
-    { label: '3:20 – 3:40 PM', time24: '15:20', slots: 6 },
-    { label: '3:40 – 4:00 PM', time24: '15:40', slots: 6 },
-    { label: '4:00 – 4:20 PM', time24: '16:00', slots: 6 },
-    { label: '4:20 – 4:40 PM', time24: '16:20', slots: 6 },
-    { label: '4:40 – 5:00 PM', time24: '16:40', slots: 6 },
+const DEFAULT_TIME_SLOTS: TimeSlotItem[] = [
+    { label: '8:00 – 8:20 AM', time24: '08:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '8:20 – 8:40 AM', time24: '08:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '8:40 – 9:00 AM', time24: '08:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '9:00 – 9:20 AM', time24: '09:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '9:20 – 9:40 AM', time24: '09:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '9:40 – 10:00 AM', time24: '09:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '10:00 – 10:20 AM', time24: '10:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '10:20 – 10:40 AM', time24: '10:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '10:40 – 11:00 AM', time24: '10:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '11:00 – 11:20 AM', time24: '11:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '11:20 – 11:40 AM', time24: '11:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '11:40 – 12:00 PM', time24: '11:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '1:00 – 1:20 PM', time24: '13:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '1:20 – 1:40 PM', time24: '13:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '1:40 – 2:00 PM', time24: '13:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '2:00 – 2:20 PM', time24: '14:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '2:20 – 2:40 PM', time24: '14:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '2:40 – 3:00 PM', time24: '14:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '3:00 – 3:20 PM', time24: '15:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '3:20 – 3:40 PM', time24: '15:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '3:40 – 4:00 PM', time24: '15:40', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '4:00 – 4:20 PM', time24: '16:00', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '4:20 – 4:40 PM', time24: '16:20', total: 6, booked: 0, available: 6, isFull: false },
+    { label: '4:40 – 5:00 PM', time24: '16:40', total: 6, booked: 0, available: 6, isFull: false },
 ];
 
 function Step9({
     centers,
     preselect,
+    initialSlotData,
 }: {
     centers: { id: number; name: string; location: string }[];
     preselect: number | null;
+    initialSlotData?: SlotData | null;
 }) {
     const [centerId] = useState<number | null>(preselect ?? centers[0]?.id ?? null);
     const [weekOffset, setWeekOffset] = useState(0);
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const [date, setDate] = useState(tomorrow);
-    const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[13]); // Default 1:20 – 1:40 PM
+    const [date, setDate] = useState(initialSlotData?.selected_date ?? tomorrow);
+    const [slotData, setSlotData] = useState<SlotData | null>(initialSlotData ?? null);
+    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+    const isFirstMount = useRef(true);
+
+    const initialSlots = initialSlotData?.slots ?? DEFAULT_TIME_SLOTS;
+    const [selectedSlot, setSelectedSlot] = useState<TimeSlotItem | null>(() => {
+        return initialSlots.find((s) => !s.isFull) ?? initialSlots[13] ?? initialSlots[0];
+    });
+
     const { errors } = usePage().props as unknown as { errors: Record<string, string> };
 
     const selectedCenter = centers.find((c) => c.id === centerId) ?? centers[0] ?? {
@@ -1439,22 +1668,89 @@ function Step9({
         location: 'PNG Statistics Haus, Waigani, National Capital District (NCD)',
     };
 
-    // Generate 7 days for the carousel starting from tomorrow + weekOffset * 7
-    const dayCards = Array.from({ length: 7 }).map((_, i) => {
+    const carouselStartDate = useMemo(() => {
         const d = new Date(Date.now() + 86400000);
-        d.setDate(d.getDate() + weekOffset * 7 + i);
-        const dateStr = d.toISOString().split('T')[0];
-        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-        const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const seed = (d.getFullYear() * 1000 + (d.getMonth() + 1) * 35 + d.getDate()) % 15;
-        const slotsCount = 18 + seed * 2;
-        return {
-            dateStr,
-            dayName,
-            formattedDate,
-            slotsCount,
+        d.setDate(d.getDate() + weekOffset * 7);
+        return d.toISOString().split('T')[0];
+    }, [weekOffset]);
+
+    useEffect(() => {
+        if (!centerId) return;
+        if (
+            isFirstMount.current &&
+            initialSlotData &&
+            initialSlotData.selected_date === date &&
+            initialSlotData.center_id === centerId &&
+            weekOffset === 0
+        ) {
+            isFirstMount.current = false;
+            return;
+        }
+        isFirstMount.current = false;
+
+        let cancelled = false;
+        setIsLoadingSlots(true);
+
+        const params = new URLSearchParams({
+            center_id: String(centerId),
+            date: date,
+            start_date: carouselStartDate,
+            days: '7',
+        });
+
+        fetch(`/api/prereg/slots?${params.toString()}`)
+            .then((res) => {
+                if (!res.ok) throw new Error('Failed to fetch slot availability');
+                return res.json();
+            })
+            .then((data: SlotData) => {
+                if (cancelled) return;
+                setSlotData(data);
+                setIsLoadingSlots(false);
+
+                setSelectedSlot((prev) => {
+                    if (!prev) {
+                        return data.slots.find((s) => !s.isFull) ?? data.slots[0] ?? null;
+                    }
+                    const matching = data.slots.find((s) => s.time24 === prev.time24);
+                    if (matching && !matching.isFull) {
+                        return matching;
+                    }
+                    return data.slots.find((s) => !s.isFull) ?? data.slots[0] ?? null;
+                });
+            })
+            .catch((err) => {
+                console.error(err);
+                if (!cancelled) setIsLoadingSlots(false);
+            });
+
+        return () => {
+            cancelled = true;
         };
-    });
+    }, [centerId, date, carouselStartDate]);
+
+    // 7 days for the carousel from real database records (or fallback computed dates)
+    const dayCards: CalendarDay[] = useMemo(() => {
+        if (slotData?.calendar && slotData.calendar.length > 0) {
+            return slotData.calendar;
+        }
+        return Array.from({ length: 7 }).map((_, i) => {
+            const d = new Date(Date.now() + 86400000);
+            d.setDate(d.getDate() + weekOffset * 7 + i);
+            const dateStr = d.toISOString().split('T')[0];
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return {
+                dateStr,
+                dayName,
+                formattedDate,
+                slotsCount: 0,
+                isFull: false,
+            };
+        });
+    }, [slotData?.calendar, weekOffset]);
+
+    const displaySlots = slotData?.slots ?? DEFAULT_TIME_SLOTS;
 
     const selectedDateObj = new Date(date);
     const selectedDayFormatted = !isNaN(selectedDateObj.getTime())
@@ -1464,18 +1760,33 @@ function Step9({
               day: 'numeric',
               year: 'numeric',
           })
-        : 'Thu, Aug 14, 2025';
+        : 'Tomorrow';
 
-    function book() {
-        if (!centerId || !date || !selectedSlot) return;
+    function book(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        if (!centerId || !date || !selectedSlot || selectedSlot.isFull) return;
         router.post('/prereg/book', {
             center_id: centerId,
             slot_at: `${date} ${selectedSlot.time24}:00`,
         });
     }
 
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Enter') {
+                const tag = (document.activeElement?.tagName || '').toLowerCase();
+                if (tag !== 'textarea') {
+                    e.preventDefault();
+                    book();
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [centerId, date, selectedSlot]);
+
     return (
-        <div className="w-full">
+        <form onSubmit={book} className="w-full">
             {/* Header */}
             <div className="mb-6 flex items-start gap-3.5">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0052CC] text-white shadow-xs">
@@ -1486,7 +1797,7 @@ function Step9({
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight text-[#0F2644]">Select Appointment Date & Time</h2>
                     <p className="mt-0.5 text-sm font-medium text-slate-500">
-                        Choose a date and time slot that works for you. Available slots are shown below.
+                        Choose a date and time slot that works for you. Available slots are live and synchronized with center capacity.
                     </p>
                 </div>
             </div>
@@ -1508,25 +1819,29 @@ function Step9({
                 <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7">
                     {dayCards.map((card) => {
                         const isSelected = date === card.dateStr;
+                        const isDayFull = card.isFull;
                         return (
                             <button
                                 key={card.dateStr}
                                 type="button"
                                 onClick={() => setDate(card.dateStr)}
+                                disabled={isDayFull}
                                 className={`relative flex flex-col items-center justify-center rounded-xl p-3 text-center transition-all ${
-                                    isSelected
+                                    isDayFull
+                                        ? 'cursor-not-allowed border border-dashed border-slate-200 bg-slate-50 text-slate-400 opacity-60'
+                                        : isSelected
                                         ? 'border border-[#0052CC] bg-[#0052CC] text-white shadow-sm ring-2 ring-[#0052CC]/20'
                                         : 'border border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50'
                                 }`}
                             >
                                 <span className="text-xs font-bold uppercase tracking-wider">{card.dayName}</span>
-                                <span className={`text-xs font-semibold mt-0.5 ${isSelected ? 'text-white' : 'text-[#0F2644]'}`}>
+                                <span className={`text-xs font-semibold mt-0.5 ${isSelected ? 'text-white' : isDayFull ? 'text-slate-400' : 'text-[#0F2644]'}`}>
                                     {card.formattedDate}
                                 </span>
-                                <span className={`text-[11px] font-medium mt-1 ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
-                                    {card.slotsCount} slots available
+                                <span className={`text-[11px] font-medium mt-1 ${isSelected ? 'text-blue-100' : isDayFull ? 'text-rose-600 font-semibold' : 'text-slate-500'}`}>
+                                    {isDayFull ? 'Fully booked' : `${card.slotsCount} slots available`}
                                 </span>
-                                {isSelected && (
+                                {isSelected && !isDayFull && (
                                     <span className="absolute -bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-[#0052CC]" />
                                 )}
                             </button>
@@ -1563,29 +1878,59 @@ function Step9({
                         </Link>
                     </div>
 
+                    <div className="mb-3 flex items-center justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Available Time Slots
+                        </h4>
+                        {isLoadingSlots ? (
+                            <span className="flex items-center gap-1.5 text-xs font-medium text-[#0052CC]">
+                                <svg className="size-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Updating availability...
+                            </span>
+                        ) : (
+                            <span className="text-xs text-slate-400">
+                                Live Center Capacity
+                            </span>
+                        )}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                        {TIME_SLOTS.map((slot) => {
-                            const isSelected = selectedSlot.time24 === slot.time24;
+                        {displaySlots.map((slot) => {
+                            const isSelected = selectedSlot?.time24 === slot.time24;
+                            const isFull = slot.isFull || slot.available <= 0;
                             return (
                                 <button
                                     key={slot.time24}
                                     type="button"
+                                    disabled={isFull}
                                     onClick={() => setSelectedSlot(slot)}
                                     className={`rounded-lg p-3 text-left transition-all ${
-                                        isSelected
+                                        isFull
+                                            ? 'cursor-not-allowed border border-dashed border-slate-200 bg-slate-50 opacity-60'
+                                            : isSelected
                                             ? 'flex items-center justify-between border border-[#0052CC] bg-[#0052CC] text-white shadow-xs'
                                             : 'border border-slate-200 bg-white text-[#0F2644] hover:border-[#0052CC] hover:bg-blue-50/40'
                                     }`}
                                 >
                                     <div>
-                                        <p className={`text-xs font-bold leading-tight sm:text-[13px] ${isSelected ? 'text-white' : 'text-[#0F2644]'}`}>
-                                            {slot.label}
-                                        </p>
-                                        <p className={`mt-1 text-[11px] font-medium ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
-                                            {slot.slots} slots
+                                        <div className="flex items-center gap-1.5">
+                                            <p className={`text-xs font-bold leading-tight sm:text-[13px] ${isFull ? 'text-slate-400 line-through' : isSelected ? 'text-white' : 'text-[#0F2644]'}`}>
+                                                {slot.label}
+                                            </p>
+                                            {isFull && (
+                                                <span className="rounded bg-rose-100 px-1 py-0.5 text-[9px] font-bold text-rose-700">
+                                                    Full
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className={`mt-1 text-[11px] font-medium ${isFull ? 'text-slate-400' : isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+                                            {isFull ? '0 available' : `${slot.available} of ${slot.total} available`}
                                         </p>
                                     </div>
-                                    {isSelected && (
+                                    {isSelected && !isFull && (
                                         <svg className="size-4 shrink-0 text-white" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                                         </svg>
@@ -1612,8 +1957,13 @@ function Step9({
                                     {selectedDayFormatted}
                                 </p>
                                 <p className="text-sm font-bold text-[#0F2644] sm:text-base">
-                                    {selectedSlot.label}
+                                    {selectedSlot ? selectedSlot.label : 'Select a slot'}
                                 </p>
+                                {selectedSlot && !selectedSlot.isFull && (
+                                    <p className="mt-1 text-xs font-semibold text-emerald-600">
+                                        ✓ {selectedSlot.available} spot{selectedSlot.available === 1 ? '' : 's'} remaining
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -1651,6 +2001,7 @@ function Step9({
             {/* Bottom Navigation */}
             <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
                 <Button
+                    type="button"
                     onClick={() => router.visit('/prereg/8')}
                     variant="outline"
                     className="h-11 rounded-lg border border-[#0052CC] bg-white px-6 text-sm font-semibold text-[#0052CC] shadow-xs transition hover:bg-blue-50/60"
@@ -1658,14 +2009,14 @@ function Step9({
                     ← Back
                 </Button>
                 <Button
-                    onClick={book}
-                    disabled={!centerId || !date || !selectedSlot}
+                    type="submit"
+                    disabled={!centerId || !date || !selectedSlot || selectedSlot.isFull}
                     className="h-11 rounded-lg bg-[#0052CC] px-8 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0047B3] active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-400"
                 >
-                    Continue →
+                    Continue (↵ Enter) →
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -1674,11 +2025,13 @@ export default function Prereg({
     draft,
     demoOtp,
     centers,
+    initialSlotData,
 }: {
     step: number;
     draft: Draft | null;
     demoOtp: string | null;
     centers: { id: number; name: string; location: string }[];
+    initialSlotData?: SlotData | null;
 }) {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const preselect = params?.get('center') ? Number(params.get('center')) : null;
@@ -1695,7 +2048,13 @@ export default function Prereg({
                 {step === 6 && <Step6 draft={draft} />}
                 {step === 7 && <Step7 draft={draft} />}
                 {step === 8 && <Step8 centers={centers} preselect={preselect} />}
-                {step === 9 && <Step9 centers={centers} preselect={preselect} />}
+                {step === 9 && (
+                    <Step9
+                        centers={centers}
+                        preselect={preselect}
+                        initialSlotData={initialSlotData}
+                    />
+                )}
                 {step === 10 && (
                     <AppointmentConfirmationCard
                         appointment={draft?.appointments?.[draft.appointments.length - 1]}

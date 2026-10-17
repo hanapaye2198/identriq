@@ -38,6 +38,7 @@ interface IdentityItem {
             dob: string;
             gender?: string;
             province?: string;
+            photo_url?: string | null;
         } | null;
     };
 }
@@ -450,6 +451,9 @@ export default function Issuance({
                               )
                             : undefined;
 
+                        const photoSrc =
+                            item.registrant.demographic?.photo_url ?? null;
+
                         const cardProps: ComponentProps<typeof NationalIdCard> =
                             {
                                 fullName: name,
@@ -458,8 +462,12 @@ export default function Issuance({
                                     'PENDING PERSONALIZATION',
                                 dateOfBirth: formatCardDate(dob) ?? '—',
                                 sex,
+                                province:
+                                    item.registrant.demographic?.province ??
+                                    '—',
                                 expiryDate: cardExpiry,
                                 signatureName: titleCaseName(name),
+                                photoSrc,
                             };
                         const cardStatus = isDelivered
                             ? 'Delivered & activated'
@@ -475,13 +483,21 @@ export default function Issuance({
                                 {/* Left: Citizen Dossier Info */}
                                 <div className="space-y-2 md:max-w-md">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 font-bold text-[#0052CC]">
-                                            {name
-                                                .split(' ')
-                                                .map((w) => w[0])
-                                                .slice(0, 2)
-                                                .join('')}
-                                        </div>
+                                        {photoSrc ? (
+                                            <img
+                                                src={photoSrc}
+                                                alt={name}
+                                                className="size-10 rounded-xl border border-slate-200 object-cover shadow-xs"
+                                            />
+                                        ) : (
+                                            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 font-bold text-[#0052CC]">
+                                                {name
+                                                    .split(' ')
+                                                    .map((w) => w[0])
+                                                    .slice(0, 2)
+                                                    .join('')}
+                                            </div>
+                                        )}
                                         <div>
                                             <h3 className="text-base font-bold text-[#0F2644]">
                                                 {name}

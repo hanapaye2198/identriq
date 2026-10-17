@@ -1,5 +1,5 @@
 import { useId, useMemo, type ReactNode } from 'react';
-import { User, QrCode } from 'lucide-react';
+import { QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface NationalIdCardProps {
@@ -14,7 +14,7 @@ export interface NationalIdCardProps {
     authority?: string;
     /** Handwriting-style signature name, e.g. "John Kumal." */
     signatureName?: string;
-    /** Portrait photo URL; falls back to John Kumal's authentic portrait. */
+    /** Portrait photo URL; falls back to a neutral silhouette placeholder. */
     photoSrc?: string | null;
     /** Raw SVG markup for the QR mark. */
     qrSvg?: string | null;
@@ -32,7 +32,7 @@ export default function NationalIdCard({
     expiryDate = '24 OCT 2031',
     authority = 'PNG CIVIL REGISTRY',
     signatureName = 'John Kumal.',
-    photoSrc = '/images/john-kumal-portrait.png',
+    photoSrc = '/images/portrait-placeholder.svg',
     qrSvg = null,
     crest,
     className,
@@ -58,10 +58,10 @@ export default function NationalIdCard({
                 className="relative aspect-[1.586] w-full overflow-hidden rounded-[2.8cqw] text-navy shadow-2xl ring-1 ring-black/15"
                 style={{
                     background:
-                        'linear-gradient(108deg, #d8623d 0%, #e88656 12%, #fdf8ef 28%, #f8fbfe 66%, #bae6fd 86%, #0284c7 100%)',
+                        'linear-gradient(105deg, #c74d28 0%, #d86937 14%, #fbf6ec 27%, #fdfdfc 48%, #f0f7fc 68%, #b3def6 86%, #0284c7 100%)',
                 }}
             >
-                {/* Traditional Papua New Guinea Tapa & Guilloche Security Pattern */}
+                {/* Traditional Papua New Guinea Tapa & Banknote Guilloche Security Pattern */}
                 <svg
                     className="pointer-events-none absolute inset-0 h-full w-full"
                     viewBox="0 0 100 63.1"
@@ -70,52 +70,271 @@ export default function NationalIdCard({
                 >
                     <defs>
                         {/* Concentric Guilloche Circles in the center */}
-                        <pattern id={`${patternId}-guilloche`} width="30" height="30" patternUnits="userSpaceOnUse">
-                            <circle cx="15" cy="15" r="14" fill="none" stroke="#2563eb" strokeWidth="0.12" opacity="0.18" />
-                            <circle cx="15" cy="15" r="11" fill="none" stroke="#d97706" strokeWidth="0.1" opacity="0.15" />
-                            <circle cx="15" cy="15" r="8" fill="none" stroke="#0284c7" strokeWidth="0.1" opacity="0.18" />
-                            <circle cx="15" cy="15" r="5" fill="none" stroke="#2563eb" strokeWidth="0.08" opacity="0.14" />
+                        <pattern
+                            id={`${patternId}-guilloche`}
+                            width="40"
+                            height="40"
+                            patternUnits="userSpaceOnUse"
+                        >
+                            <circle
+                                cx="20"
+                                cy="20"
+                                r="19"
+                                fill="none"
+                                stroke="#1d4ed8"
+                                strokeWidth="0.1"
+                                opacity="0.14"
+                                strokeDasharray="0.6 0.3"
+                            />
+                            <circle
+                                cx="20"
+                                cy="20"
+                                r="16"
+                                fill="none"
+                                stroke="#d97706"
+                                strokeWidth="0.1"
+                                opacity="0.12"
+                            />
+                            <circle
+                                cx="20"
+                                cy="20"
+                                r="13"
+                                fill="none"
+                                stroke="#0284c7"
+                                strokeWidth="0.08"
+                                opacity="0.14"
+                                strokeDasharray="0.4 0.2"
+                            />
+                            <circle
+                                cx="20"
+                                cy="20"
+                                r="10"
+                                fill="none"
+                                stroke="#2563eb"
+                                strokeWidth="0.08"
+                                opacity="0.15"
+                            />
+                            <circle
+                                cx="20"
+                                cy="20"
+                                r="7"
+                                fill="none"
+                                stroke="#b45309"
+                                strokeWidth="0.06"
+                                opacity="0.12"
+                            />
+                            <circle
+                                cx="20"
+                                cy="20"
+                                r="4"
+                                fill="none"
+                                stroke="#0284c7"
+                                strokeWidth="0.06"
+                                opacity="0.14"
+                            />
                         </pattern>
+
+                        {/* Traditional Melanesian Tapa Left Pattern */}
+                        <pattern
+                            id={`${patternId}-left-tapa`}
+                            width="14"
+                            height="14"
+                            patternUnits="userSpaceOnUse"
+                        >
+                            {/* Dark terracotta chevron arrowheads */}
+                            <path
+                                d="M 0 0 L 7 7 L 0 14 Z M 7 0 L 14 7 L 7 14 Z"
+                                fill="#7f1d1d"
+                                opacity="0.35"
+                            />
+                            {/* Ochre diamond center */}
+                            <polygon
+                                points="7,2 12,7 7,12 2,7"
+                                fill="#f59e0b"
+                                opacity="0.25"
+                            />
+                            <circle
+                                cx="7"
+                                cy="7"
+                                r="1"
+                                fill="#fff"
+                                opacity="0.4"
+                            />
+                        </pattern>
+
+                        {/* Traditional Pacific Oceanic Cyan Tapa Pattern */}
+                        <pattern
+                            id={`${patternId}-right-tapa`}
+                            width="12"
+                            height="12"
+                            patternUnits="userSpaceOnUse"
+                        >
+                            {/* Cyan diamond weave */}
+                            <polygon
+                                points="6,0 12,6 6,12 0,6"
+                                fill="none"
+                                stroke="#0284c7"
+                                strokeWidth="0.6"
+                                opacity="0.4"
+                            />
+                            <polygon
+                                points="6,2 10,6 6,10 2,6"
+                                fill="#38bdf8"
+                                opacity="0.28"
+                            />
+                            <path
+                                d="M 0 0 L 6 6 L 12 0 M 0 12 L 6 6 L 12 12"
+                                stroke="#0369a1"
+                                strokeWidth="0.4"
+                                opacity="0.3"
+                                fill="none"
+                            />
+                        </pattern>
+
+                        {/* Smooth gradient masks for organic tapa transitions */}
+                        <linearGradient
+                            id={`${patternId}-left-fade`}
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="0"
+                        >
+                            <stop
+                                offset="0%"
+                                stopColor="#fff"
+                                stopOpacity="0.9"
+                            />
+                            <stop
+                                offset="70%"
+                                stopColor="#fff"
+                                stopOpacity="0.7"
+                            />
+                            <stop
+                                offset="100%"
+                                stopColor="#fff"
+                                stopOpacity="0"
+                            />
+                        </linearGradient>
+
+                        <linearGradient
+                            id={`${patternId}-right-fade`}
+                            x1="1"
+                            y1="0"
+                            x2="0"
+                            y2="0"
+                        >
+                            <stop
+                                offset="0%"
+                                stopColor="#fff"
+                                stopOpacity="0.95"
+                            />
+                            <stop
+                                offset="70%"
+                                stopColor="#fff"
+                                stopOpacity="0.7"
+                            />
+                            <stop
+                                offset="100%"
+                                stopColor="#fff"
+                                stopOpacity="0"
+                            />
+                        </linearGradient>
                     </defs>
 
-                    {/* Central Guilloche Background */}
-                    <rect x="25" y="0" width="55" height="63.1" fill={`url(#${patternId}-guilloche)`} />
+                    {/* Central Banknote Guilloche Background */}
+                    <rect
+                        x="20"
+                        y="0"
+                        width="60"
+                        height="63.1"
+                        fill={`url(#${patternId}-guilloche)`}
+                    />
 
-                    {/* Left Tapa Border (Warm Terracotta / Geometric Triangles) */}
-                    <g fill="#991b1b" opacity="0.32">
-                        {Array.from({ length: 9 }).map((_, i) => (
-                            <path
-                                key={`tapa-left-${i}`}
-                                d={`M 0 ${i * 7} L 4 ${i * 7 + 3.5} L 0 ${i * 7 + 7} Z M 4 ${i * 7} L 8 ${i * 7 + 3.5} L 4 ${i * 7 + 7} Z`}
-                            />
-                        ))}
-                    </g>
-                    <g fill="#d97706" opacity="0.28">
-                        {Array.from({ length: 9 }).map((_, i) => (
-                            <path
-                                key={`tapa-left-2-${i}`}
-                                d={`M 8 ${i * 7} L 12 ${i * 7 + 3.5} L 8 ${i * 7 + 7} Z M 12 ${i * 7} L 16 ${i * 7 + 3.5} L 12 ${i * 7 + 7} Z`}
+                    {/* Faint Center Circular Watermark Rosette */}
+                    <g transform="translate(62, 31)" opacity="0.18">
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="18"
+                            fill="none"
+                            stroke="#0284c7"
+                            strokeWidth="0.2"
+                        />
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="14"
+                            fill="none"
+                            stroke="#b45309"
+                            strokeWidth="0.15"
+                            strokeDasharray="0.8 0.4"
+                        />
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="10"
+                            fill="none"
+                            stroke="#1d4ed8"
+                            strokeWidth="0.2"
+                        />
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="6"
+                            fill="none"
+                            stroke="#0284c7"
+                            strokeWidth="0.15"
+                        />
+                        {Array.from({ length: 12 }).map((_, i) => (
+                            <line
+                                key={`ray-${i}`}
+                                x1="0"
+                                y1="0"
+                                x2={Math.cos((i * 30 * Math.PI) / 180) * 17}
+                                y2={Math.sin((i * 30 * Math.PI) / 180) * 17}
+                                stroke="#d97706"
+                                strokeWidth="0.12"
                             />
                         ))}
                     </g>
 
-                    {/* Right Tapa Border (Oceanic Cyan / Blue Diamond Weave) */}
-                    <g fill="#0284c7" opacity="0.35">
-                        {Array.from({ length: 9 }).map((_, i) => (
-                            <path
-                                key={`tapa-right-${i}`}
-                                d={`M 100 ${i * 7} L 96 ${i * 7 + 3.5} L 100 ${i * 7 + 7} Z M 96 ${i * 7} L 92 ${i * 7 + 3.5} L 96 ${i * 7 + 7} Z`}
-                            />
-                        ))}
-                    </g>
-                    <g fill="#38bdf8" opacity="0.30">
-                        {Array.from({ length: 9 }).map((_, i) => (
-                            <path
-                                key={`tapa-right-2-${i}`}
-                                d={`M 92 ${i * 7} L 88 ${i * 7 + 3.5} L 92 ${i * 7 + 7} Z M 88 ${i * 7} L 84 ${i * 7 + 3.5} L 88 ${i * 7 + 7} Z`}
-                            />
-                        ))}
-                    </g>
+                    {/* Left Terracotta Tapa Zone with Curved Organic Border */}
+                    <path
+                        d="M 0 0 L 26 0 Q 30 20 25 40 Q 20 55 24 63.1 L 0 63.1 Z"
+                        fill={`url(#${patternId}-left-tapa)`}
+                    />
+                    <path
+                        d="M 0 0 L 26 0 Q 30 20 25 40 Q 20 55 24 63.1 L 0 63.1 Z"
+                        fill="#b91c1c"
+                        opacity="0.15"
+                    />
+
+                    {/* Right Oceanic Cyan Tapa Zone with Organic Curved Sweep */}
+                    <path
+                        d="M 100 0 L 76 0 Q 72 20 78 40 Q 82 55 75 63.1 L 100 63.1 Z"
+                        fill={`url(#${patternId}-right-tapa)`}
+                    />
+                    <path
+                        d="M 100 0 L 76 0 Q 72 20 78 40 Q 82 55 75 63.1 L 100 63.1 Z"
+                        fill="#0284c7"
+                        opacity="0.12"
+                    />
+
+                    {/* Fine Security Micro-wave Ribbon along the bottom */}
+                    <path
+                        d="M 0 58 Q 25 54 50 58 T 100 58"
+                        fill="none"
+                        stroke="#0284c7"
+                        strokeWidth="0.15"
+                        opacity="0.35"
+                    />
+                    <path
+                        d="M 0 59 Q 25 55 50 59 T 100 59"
+                        fill="none"
+                        stroke="#d97706"
+                        strokeWidth="0.1"
+                        opacity="0.3"
+                    />
                 </svg>
 
                 {/* Subtle Light Reflection Sheen Overlay */}
@@ -123,7 +342,7 @@ export default function NationalIdCard({
                     className="pointer-events-none absolute inset-0 opacity-40"
                     style={{
                         background:
-                            'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.3) 100%)',
+                            'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.25) 100%)',
                     }}
                 />
 
@@ -137,12 +356,12 @@ export default function NationalIdCard({
                         <div className="flex shrink-0 items-center">
                             {crest ?? (
                                 <img
-                                    src="/images/png-crest-kumul.png"
+                                    src="/images/png-crest-kumul-hd.png"
                                     alt="Papua New Guinea Crest"
-                                    className="h-[7.8cqw] w-auto drop-shadow-xs object-contain"
+                                    className="h-[7.8cqw] w-auto object-contain drop-shadow-xs"
                                     onError={(e) => {
-                                        // Fallback to Bird icon if image load fails
-                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.src =
+                                            '/images/png-crest-kumul.png';
                                     }}
                                 />
                             )}
@@ -151,14 +370,15 @@ export default function NationalIdCard({
                         {/* Top Center: Official State Header */}
                         <div className="flex-1 text-center">
                             <h2
-                                className="font-serif text-[3.2cqw] font-black tracking-[0.06em] text-[#9A6214] uppercase leading-tight"
+                                className="font-serif text-[3.2cqw] leading-tight font-black tracking-[0.06em] text-[#9A6214] uppercase"
                                 style={{
-                                    textShadow: '0 1px 1px rgba(255,255,255,0.8), 0 -1px 1px rgba(0,0,0,0.1)',
+                                    textShadow:
+                                        '0 1px 1px rgba(255,255,255,0.8), 0 -1px 1px rgba(0,0,0,0.1)',
                                 }}
                             >
                                 PAPUA NEW GUINEA
                             </h2>
-                            <h3 className="text-[2.5cqw] font-black tracking-[0.02em] text-[#0B2B64] uppercase leading-none mt-[0.3cqw]">
+                            <h3 className="mt-[0.3cqw] text-[2.4cqw] leading-none font-black tracking-[0.02em] text-[#0B2B64] uppercase">
                                 NATIONAL IDENTITY CARD
                             </h3>
                         </div>
@@ -191,40 +411,123 @@ export default function NationalIdCard({
                             <div className="relative">
                                 <div className="h-[27cqw] w-full overflow-hidden rounded-[1.4cqw] border-[0.45cqw] border-white bg-slate-200 shadow-md ring-1 ring-black/15">
                                     <img
-                                        src={photoSrc || '/images/john-kumal-portrait.png'}
+                                        src={
+                                            photoSrc ||
+                                            '/images/portrait-placeholder.svg'
+                                        }
                                         alt={fullName}
-                                        className="h-full w-full object-cover object-top"
+                                        className="h-full w-full object-cover object-center"
                                         onError={(e) => {
-                                            // Fallback to placeholder if file missing
-                                            e.currentTarget.src = '/images/png-hero-photo.png';
+                                            e.currentTarget.src =
+                                                '/images/portrait-placeholder.svg';
                                         }}
                                     />
                                 </div>
 
                                 {/* Rainbow Iridescent Biometric Fingerprint Hologram Overlay */}
                                 <div
-                                    className="pointer-events-none absolute -right-[2.5cqw] -bottom-[2.5cqw] size-[8.5cqw] rounded-full opacity-80"
+                                    className="pointer-events-none absolute -right-[2.8cqw] -bottom-[2.8cqw] size-[9.2cqw] rounded-full"
                                     style={{
-                                        background:
-                                            'conic-gradient(from 180deg, rgba(236,72,153,0.85), rgba(139,92,246,0.85), rgba(59,130,246,0.85), rgba(16,185,129,0.85), rgba(245,158,11,0.85), rgba(236,72,153,0.85))',
-                                        maskImage: 'radial-gradient(circle, black 40%, transparent 75%)',
-                                        WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 75%)',
-                                        filter: 'blur(0.2px)',
+                                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))',
                                     }}
                                     aria-hidden="true"
                                 >
-                                    <svg viewBox="0 0 24 24" className="h-full w-full stroke-white p-1" fill="none" strokeWidth={1.4}>
-                                        <path d="M12 2a10 10 0 0 0-10 10c0 4.2 2.6 7.8 6.3 9.3" />
-                                        <path d="M12 6a6 6 0 0 0-6 6c0 2.5 1.5 4.7 3.8 5.6" />
-                                        <path d="M12 10a2 2 0 0 0-2 2c0 .9.5 1.7 1.3 2" />
+                                    <svg
+                                        viewBox="0 0 100 100"
+                                        className="h-full w-full"
+                                    >
+                                        <defs>
+                                            <linearGradient
+                                                id={`${patternId}-holo-grad`}
+                                                x1="0%"
+                                                y1="0%"
+                                                x2="100%"
+                                                y2="100%"
+                                            >
+                                                <stop
+                                                    offset="0%"
+                                                    stopColor="#06b6d4"
+                                                    stopOpacity="0.85"
+                                                />
+                                                <stop
+                                                    offset="25%"
+                                                    stopColor="#10b981"
+                                                    stopOpacity="0.85"
+                                                />
+                                                <stop
+                                                    offset="50%"
+                                                    stopColor="#f59e0b"
+                                                    stopOpacity="0.85"
+                                                />
+                                                <stop
+                                                    offset="75%"
+                                                    stopColor="#ec4899"
+                                                    stopOpacity="0.85"
+                                                />
+                                                <stop
+                                                    offset="100%"
+                                                    stopColor="#8b5cf6"
+                                                    stopOpacity="0.85"
+                                                />
+                                            </linearGradient>
+                                        </defs>
+                                        {/* Fingerprint ridges looping */}
+                                        <path
+                                            d="M 50 15 A 35 35 0 0 1 85 50 A 35 35 0 0 1 78 72"
+                                            fill="none"
+                                            stroke={`url(#${patternId}-holo-grad)`}
+                                            strokeWidth="3.2"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M 22 65 A 35 35 0 0 1 15 50 A 35 35 0 0 1 50 15"
+                                            fill="none"
+                                            stroke={`url(#${patternId}-holo-grad)`}
+                                            strokeWidth="3.2"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M 50 25 A 25 25 0 0 1 75 50 A 25 25 0 0 1 65 72"
+                                            fill="none"
+                                            stroke={`url(#${patternId}-holo-grad)`}
+                                            strokeWidth="3.2"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M 35 72 A 25 25 0 0 1 25 50 A 25 25 0 0 1 50 25"
+                                            fill="none"
+                                            stroke={`url(#${patternId}-holo-grad)`}
+                                            strokeWidth="3.2"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M 50 35 A 15 15 0 0 1 65 50 Q 65 65 50 78 Q 35 65 35 50 A 15 15 0 0 1 50 35"
+                                            fill="none"
+                                            stroke={`url(#${patternId}-holo-grad)`}
+                                            strokeWidth="3.2"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M 50 45 A 5 5 0 0 1 55 50 Q 55 60 50 68 Q 45 60 45 50 A 5 5 0 0 1 50 45"
+                                            fill="none"
+                                            stroke={`url(#${patternId}-holo-grad)`}
+                                            strokeWidth="3.2"
+                                            strokeLinecap="round"
+                                        />
                                     </svg>
                                 </div>
                             </div>
 
                             {/* Citizen Name Directly Below Photo (Exactly like template) */}
-                            <div className="mt-[1.4cqw] leading-[1.05] font-black uppercase tracking-[0.01em] text-black">
-                                <div className="text-[2.6cqw]">{nameLines[0]}</div>
-                                {nameLines[1] && <div className="text-[2.4cqw]">{nameLines[1]}</div>}
+                            <div className="mt-[1.4cqw] leading-[1.05] font-black tracking-[0.01em] text-black uppercase">
+                                <div className="text-[2.6cqw]">
+                                    {nameLines[0]}
+                                </div>
+                                {nameLines[1] && (
+                                    <div className="text-[2.4cqw]">
+                                        {nameLines[1]}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -232,42 +535,60 @@ export default function NationalIdCard({
                         <div className="flex h-full flex-col justify-between pl-[0.5cqw]">
                             {/* ID Number Badge (White embossed box) */}
                             <div>
-                                <span className="text-[1.3cqw] font-black text-slate-700 uppercase tracking-[0.16em]">
+                                <span className="text-[1.3cqw] font-black tracking-[0.16em] text-slate-700 uppercase">
                                     ID NUMBER:
                                 </span>
                                 <div className="mt-[0.2cqw] inline-block rounded-[1cqw] border border-black/15 bg-white/95 px-[2cqw] py-[0.6cqw] shadow-xs">
-                                    <span className="font-mono text-[3.8cqw] font-black tracking-[0.05em] text-black leading-none">
+                                    <span className="font-mono text-[3.8cqw] leading-none font-black tracking-[0.05em] text-black">
                                         {idNumber}
                                     </span>
                                 </div>
                             </div>
 
                             {/* Demographic Fields Grid */}
-                            <div className="mt-[1.2cqw] space-y-[0.8cqw] text-[1.95cqw] font-bold text-black leading-snug">
+                            <div className="mt-[1.2cqw] space-y-[0.8cqw] text-[1.95cqw] leading-snug font-bold text-black">
                                 <div>
-                                    <span className="text-slate-600 font-medium">DATE OF BIRTH: </span>
-                                    <span className="font-mono">{dateOfBirth}</span>
+                                    <span className="font-medium text-slate-600">
+                                        DATE OF BIRTH:{' '}
+                                    </span>
+                                    <span className="font-mono">
+                                        {dateOfBirth}
+                                    </span>
                                 </div>
 
                                 <div className="flex items-center gap-[2.5cqw]">
                                     <div>
-                                        <span className="text-slate-600 font-medium">SEX: </span>
+                                        <span className="font-medium text-slate-600">
+                                            SEX:{' '}
+                                        </span>
                                         <span>{sex}</span>
                                     </div>
                                     <div>
-                                        <span className="text-slate-600 font-medium">NATIONALITY: </span>
-                                        <span className="uppercase">{nationality}</span>
+                                        <span className="font-medium text-slate-600">
+                                            NATIONALITY:{' '}
+                                        </span>
+                                        <span className="uppercase">
+                                            {nationality}
+                                        </span>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <span className="text-slate-600 font-medium">EXPIRY DATE: </span>
-                                    <span className="font-mono">{expiryDate}</span>
+                                    <span className="font-medium text-slate-600">
+                                        EXPIRY DATE:{' '}
+                                    </span>
+                                    <span className="font-mono">
+                                        {expiryDate}
+                                    </span>
                                 </div>
 
                                 <div>
-                                    <span className="text-slate-600 font-medium">AUTHORITY: </span>
-                                    <span className="uppercase">{authority}</span>
+                                    <span className="font-medium text-slate-600">
+                                        AUTHORITY:{' '}
+                                    </span>
+                                    <span className="uppercase">
+                                        {authority}
+                                    </span>
                                 </div>
                             </div>
 
@@ -276,9 +597,10 @@ export default function NationalIdCard({
                                 {/* Official Handwritten Signature */}
                                 <div>
                                     <p
-                                        className="text-[3.8cqw] leading-none text-[#1e3a8a] font-normal"
+                                        className="text-[3.8cqw] leading-none font-normal text-[#1e3a8a]"
                                         style={{
-                                            fontFamily: "'Segoe Script', 'Brush Script MT', 'Caveat', cursive",
+                                            fontFamily:
+                                                "'Segoe Script', 'Brush Script MT', 'Caveat', cursive",
                                             transform: 'rotate(-2deg)',
                                         }}
                                     >
@@ -292,14 +614,20 @@ export default function NationalIdCard({
                                         {qrSvg ? (
                                             <div
                                                 className="[&_svg]:h-full [&_svg]:w-full"
-                                                dangerouslySetInnerHTML={{ __html: qrSvg }}
+                                                dangerouslySetInnerHTML={{
+                                                    __html: qrSvg,
+                                                }}
                                             />
                                         ) : (
-                                            <div className="h-full w-full flex items-center justify-center relative">
-                                                <QrCode className="h-full w-full text-black stroke-[1.5]" />
+                                            <div className="relative flex h-full w-full items-center justify-center">
+                                                <QrCode className="h-full w-full stroke-[1.5] text-black" />
                                                 <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="size-[2.6cqw] rounded-full bg-white flex items-center justify-center shadow-xs">
-                                                        <img src="/images/identriq-mark.png" alt="" className="size-[2cqw] object-contain" />
+                                                    <div className="flex size-[2.6cqw] items-center justify-center rounded-full bg-white shadow-xs">
+                                                        <img
+                                                            src="/images/identriq-mark.png"
+                                                            alt=""
+                                                            className="size-[2cqw] object-contain"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -337,3 +665,5 @@ function Chip({ className }: { className?: string }) {
         </div>
     );
 }
+
+export { default as NationalIdCardBack } from './national-id-card-back';

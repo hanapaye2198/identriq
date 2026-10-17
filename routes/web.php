@@ -58,6 +58,7 @@ Route::get('/admin/export.csv', [AdminController::class, 'export'])->name('admin
 Route::get('/verify/offline', [VerifyController::class, 'offline'])->name('verify.offline');
 Route::post('/verify/offline/check', [VerifyController::class, 'check'])->name('verify.check');
 Route::post('/verify/outbox/sync', [VerifyController::class, 'syncOutbox'])->name('verify.sync');
+Route::get('/verify/snapshot', [VerifyController::class, 'snapshot'])->name('verify.snapshot');
 Route::get('/verify/online', [VerifyController::class, 'online'])->name('verify.online');
 Route::post('/verify/online/lookup', [VerifyController::class, 'lookup'])->middleware('throttle:10,1')->name('verify.lookup');
 Route::post('/verify/online/biometric', [VerifyController::class, 'biometric'])->middleware('throttle:10,1')->name('verify.biometric');

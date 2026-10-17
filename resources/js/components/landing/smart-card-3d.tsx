@@ -1,23 +1,33 @@
 import { CheckCircle2, QrCode, RefreshCw, Shield, Sparkles, User, Wifi } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import NationalIdCard from '@/components/national-id-card';
+import NationalIdCardBack from '@/components/national-id-card-back';
 
-interface SmartCard3DProps {
+export interface SmartCard3DProps {
     citizenName?: string;
     idNumber?: string;
     dob?: string;
     province?: string;
     sex?: string;
+    nationality?: string;
     expiryDate?: string;
+    authority?: string;
+    signatureName?: string;
+    photoSrc?: string | null;
     className?: string;
 }
 
 export default function SmartCard3D({
-    citizenName = 'AMINI, KILA PETER',
-    idNumber = 'PNG-2026-9042-8810',
-    dob = '14 APR 1994',
+    citizenName = 'KUMAL, JOHN A.',
+    idNumber = '785-3049-921-A',
+    dob = '14 APR 1988',
     province = 'CENTRAL PROVINCE',
-    sex = 'F',
-    expiryDate = '14 APR 2036',
+    sex = 'M',
+    nationality = 'PAPUA NEW GUINEA',
+    expiryDate = '24 OCT 2031',
+    authority = 'PNG CIVIL REGISTRY',
+    signatureName = 'John Kumal.',
+    photoSrc = '/images/john-kumal-portrait-hd.png',
     className = '',
 }: SmartCard3DProps) {
     const cardRef = useRef<HTMLDivElement | null>(null);
@@ -55,7 +65,7 @@ export default function SmartCard3D({
         setGlare({
             x: (mouseX / width) * 100,
             y: (mouseY / height) * 100,
-            opacity: 0.65,
+            opacity: 0.7,
         });
     }, []);
 
@@ -80,265 +90,160 @@ export default function SmartCard3D({
     };
 
     return (
-        <div className={`flex flex-col items-center ${className}`}>
-            {/* Card 3D Canvas Stage */}
-            <div
-                className="group relative w-full max-w-[420px] select-none py-2"
-                style={{ perspective: '1200px' }}
-                onMouseMove={handleMouseMove}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-            >
-                {/* 3D Transform Container */}
-                <div
-                    ref={cardRef}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Papua New Guinea National ID Card for ${citizenName}. Click or press space to flip.`}
-                    onKeyDown={handleKeyDown}
-                    onClick={() => setIsFlipped((f) => !f)}
-                    className="relative aspect-[1.586/1] w-full cursor-pointer rounded-2xl shadow-2xl transition-transform duration-300 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary focus-visible:ring-offset-4"
-                    style={{
-                        transformStyle: 'preserve-3d',
-                        transform: `rotateX(${rotX}deg) rotateY(${isFlipped ? rotY + 180 : rotY}deg) ${
-                            isHovered ? 'scale3d(1.02, 1.02, 1.02)' : 'scale3d(1, 1, 1)'
-                        }`,
-                        transition: isHovered
-                            ? 'transform 0.08s ease-out'
-                            : 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
-                    }}
+        <div className={`relative flex flex-col items-center w-full ${className}`}>
+            {/* AMBIENT PRESENTATION STAGE WITH CURVED CYAN RIBBONS (Matches reference photo layout) */}
+            <div className="relative w-full max-w-[460px] overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-[#f0f7ff] via-[#e2f1fd] to-[#f8fbfe] p-4 sm:p-6 shadow-lg shadow-sky-900/5">
+                {/* 3D Cyan Curved Background Ribbons from template layout */}
+                <svg
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                    viewBox="0 0 460 300"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
                 >
-                    {/* =========================================================================
-                        FRONT FACE: OFFICIAL NATIONAL POLYCARBONATE SMART CARD
-                       ========================================================================= */}
+                    <defs>
+                        <linearGradient id="ribbon-cyan-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.7" />
+                            <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.45" />
+                            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.2" />
+                        </linearGradient>
+                        <linearGradient id="ribbon-cyan-2" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#0284c7" stopOpacity="0.2" />
+                            <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#e0f2fe" stopOpacity="0.6" />
+                        </linearGradient>
+                    </defs>
+                    {/* Sweeping dynamic waves matching presentation mockup */}
+                    <path
+                        d="M -30 220 C 80 140, 240 260, 490 180 L 490 310 L -30 310 Z"
+                        fill="url(#ribbon-cyan-1)"
+                    />
+                    <path
+                        d="M -20 160 C 140 210, 310 110, 480 170"
+                        fill="none"
+                        stroke="url(#ribbon-cyan-2)"
+                        strokeWidth="18"
+                        strokeLinecap="round"
+                    />
+                    <path
+                        d="M 20 280 C 180 200, 320 290, 480 230"
+                        fill="none"
+                        stroke="#0284c7"
+                        strokeWidth="4"
+                        opacity="0.3"
+                    />
+                </svg>
+
+                {/* Card 3D Canvas Stage */}
+                <div
+                    className="group relative mx-auto w-full max-w-[400px] select-none py-1"
+                    style={{ perspective: '1200px' }}
+                    onMouseMove={handleMouseMove}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    {/* Realistic 3D floating shadow underneath */}
                     <div
-                        className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border border-white/20 p-5 text-white shadow-2xl"
+                        className="pointer-events-none absolute -bottom-4 left-1/2 h-8 w-4/5 -translate-x-1/2 rounded-full transition-all duration-300"
                         style={{
-                            backfaceVisibility: 'hidden',
-                            WebkitBackfaceVisibility: 'hidden',
                             background:
-                                'linear-gradient(135deg, #071933 0%, #0B254A 38%, #0C366B 68%, #0A1E3C 100%)',
+                                'radial-gradient(ellipse at center, rgba(2, 132, 199, 0.35) 0%, rgba(2, 132, 199, 0) 70%)',
+                            transform: `translateX(-50%) translateY(${isHovered ? '6px' : '0px'}) scale(${
+                                isHovered ? 1.08 : 1
+                            })`,
+                            filter: 'blur(8px)',
+                        }}
+                    />
+
+                    {/* 3D Transform Container */}
+                    <div
+                        ref={cardRef}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Papua New Guinea National ID Card for ${citizenName}. Click or press space to flip.`}
+                        onKeyDown={handleKeyDown}
+                        onClick={() => setIsFlipped((f) => !f)}
+                        className="relative aspect-[1.586/1] w-full cursor-pointer rounded-2xl transition-transform duration-300 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary focus-visible:ring-offset-4"
+                        style={{
+                            transformStyle: 'preserve-3d',
+                            transform: `rotateX(${rotX}deg) rotateY(${isFlipped ? rotY + 180 : rotY}deg) ${
+                                isHovered ? 'scale3d(1.025, 1.025, 1.025)' : 'scale3d(1, 1, 1)'
+                            }`,
+                            transition: isHovered
+                                ? 'transform 0.08s ease-out'
+                                : 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
                         }}
                     >
-                        {/* Micro-guilloche security pattern overlay */}
+                        {/* =========================================================================
+                            FRONT FACE: OFFICIAL NATIONAL ID CARD (EXACT TEMPLATE)
+                           ========================================================================= */}
                         <div
-                            className="pointer-events-none absolute inset-0 opacity-15"
+                            className="absolute inset-0 overflow-hidden rounded-2xl shadow-2xl"
                             style={{
-                                backgroundImage: `radial-gradient(circle at 50% 50%, #0052CC 1px, transparent 1px), radial-gradient(circle at 0% 100%, #C9A227 1px, transparent 1px)`,
-                                backgroundSize: '16px 16px, 24px 24px',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
                             }}
-                        />
+                        >
+                            <NationalIdCard
+                                fullName={citizenName}
+                                idNumber={idNumber}
+                                dateOfBirth={dob}
+                                sex={sex}
+                                nationality={nationality}
+                                expiryDate={expiryDate}
+                                authority={authority}
+                                signatureName={signatureName}
+                                photoSrc={photoSrc}
+                                className="h-full w-full"
+                            />
 
-                        {/* Embedded Holographic Watermark of the IDENTRIQ Biometric Emblem */}
-                        <div className="pointer-events-none absolute -right-6 -top-6 h-48 w-48 opacity-10">
-                            <img
-                                src="/images/identriq-mark.png"
-                                alt=""
-                                className="h-full w-full object-contain filter invert"
+                            {/* Interactive Holographic Glare Follower Overlay */}
+                            <div
+                                className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-300"
+                                style={{
+                                    opacity: glare.opacity,
+                                    background: `radial-gradient(circle 280px at ${glare.x}% ${glare.y}%, rgba(255, 255, 255, 0.45) 0%, rgba(201, 162, 39, 0.2) 35%, transparent 70%)`,
+                                }}
                             />
                         </div>
 
-                        {/* Interactive Holographic Glare Follower */}
+                        {/* =========================================================================
+                            BACK FACE: REVERSE SECURITY MRZ & CONTACTLESS CHIP ARCHITECTURE
+                           ========================================================================= */}
                         <div
-                            className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+                            className="absolute inset-0 overflow-hidden rounded-2xl shadow-2xl"
                             style={{
-                                opacity: glare.opacity,
-                                background: `radial-gradient(circle 260px at ${glare.x}% ${glare.y}%, rgba(255, 255, 255, 0.35) 0%, rgba(201, 162, 39, 0.15) 35%, transparent 70%)`,
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                                transform: 'rotateY(180deg)',
                             }}
-                        />
-
-                        {/* Top Masthead: Sovereign Heading & Crest */}
-                        <div className="relative z-10 flex items-start justify-between gap-3 border-b border-white/15 pb-2.5">
-                            <div className="flex items-center gap-2.5">
-                                <img
-                                    src="/images/identriq-mark.png"
-                                    alt="IDENTRIQ Sovereign Mark"
-                                    className="h-8 w-8 object-contain drop-shadow"
-                                />
-                                <div>
-                                    <div className="text-[10px] font-bold tracking-widest text-[#C9A227] uppercase">
-                                        Independent State of Papua New Guinea
-                                    </div>
-                                    <div className="text-xs font-black tracking-tight text-white uppercase sm:text-sm">
-                                        National Identity Smart Card
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="rounded bg-[#C9A227]/20 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-[#C9A227] border border-[#C9A227]/40 uppercase">
-                                    Official
-                                </span>
-                                <div className="mt-1 flex items-center gap-1 text-[9px] text-white/60 font-mono">
-                                    <Wifi className="h-2.5 w-2.5 rotate-90 text-[#38BDF8]" aria-hidden="true" />
-                                    <span>NFC</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Middle Card Content: Photo, Gold Chip, Biometric Fields */}
-                        <div className="relative z-10 my-auto grid grid-cols-[82px_1fr] items-center gap-4 pt-1">
-                            {/* Biometric Portrait Frame */}
-                            <div className="relative flex flex-col items-center">
-                                <div className="relative h-24 w-20 overflow-hidden rounded-lg border-2 border-white/30 bg-[#0B192C]/80 shadow-md">
-                                    <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-white/10 to-transparent text-white/70">
-                                        <User className="h-10 w-10 text-white/80" aria-hidden="true" />
-                                        <span className="text-[8px] font-bold uppercase tracking-wider text-white/50">
-                                            Portrait
-                                        </span>
-                                    </div>
-                                    {/* Security hologram stamp on photo corner */}
-                                    <div className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full bg-gradient-to-tr from-[#C9A227] via-amber-200 to-sky-400 opacity-80 shadow-sm" />
-                                </div>
-                                <span className="mt-1 text-[8px] font-semibold text-[#38BDF8] tracking-widest uppercase">
-                                    Biometric Match
-                                </span>
-                            </div>
-
-                            {/* Citizen Demographic Fields & Gold Chip */}
-                            <div className="flex flex-col justify-between space-y-1.5 text-left">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <div className="text-[8px] font-semibold tracking-wider text-white/60 uppercase">
-                                            Full Name / Nem Bilong Yu
-                                        </div>
-                                        <div className="text-xs font-bold tracking-tight text-white sm:text-sm">
-                                            {citizenName}
-                                        </div>
-                                    </div>
-
-                                    {/* Metallic Gold Security Microchip (Physical EMV/Biometric) */}
-                                    <div
-                                        className="relative h-7 w-9 shrink-0 rounded-md border border-[#9A7B1C] shadow-inner"
-                                        style={{
-                                            background:
-                                                'linear-gradient(135deg, #ECC94B 0%, #D69E2E 50%, #B7791F 100%)',
-                                        }}
-                                        title="Embedded Secure Cryptographic Microchip"
-                                    >
-                                        {/* Chip circuit contact pattern */}
-                                        <div className="absolute inset-0.5 rounded-sm border border-black/20" />
-                                        <div className="absolute inset-x-0 top-1/2 h-[1px] bg-black/25" />
-                                        <div className="absolute inset-y-0 left-1/3 w-[1px] bg-black/25" />
-                                        <div className="absolute inset-y-0 right-1/3 w-[1px] bg-black/25" />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                    <div>
-                                        <div className="text-[8px] text-white/60 uppercase">Date of Birth</div>
-                                        <div className="font-semibold text-white font-mono">{dob}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-[8px] text-white/60 uppercase">Province</div>
-                                        <div className="font-semibold text-white truncate">{province}</div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                    <div>
-                                        <div className="text-[8px] text-white/60 uppercase">National ID No.</div>
-                                        <div className="font-mono font-black text-[#38BDF8] tracking-wide text-[11px]">
-                                            {idNumber}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-[8px] text-white/60 uppercase">Status</div>
-                                        <div className="flex items-center gap-1 font-bold text-emerald-400 text-[10px]">
-                                            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                                            <span>VERIFIED</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Card Bottom Strip: Legal Authority & Expiry */}
-                        <div className="relative z-10 flex items-center justify-between border-t border-white/15 pt-2 text-[9px] text-white/70">
-                            <span className="font-mono text-[8px] tracking-wider text-white/50">
-                                CIVIL &amp; NATIONAL REGISTRATION AUTHORITY
-                            </span>
-                            <span className="font-mono text-white/80">
-                                EXP: <strong className="text-white">{expiryDate}</strong>
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* =========================================================================
-                        BACK FACE: REVERSE SECURITY MRZ & CONTACTLESS CHIP ARCHITECTURE
-                       ========================================================================= */}
-                    <div
-                        className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border border-white/20 p-5 text-white shadow-2xl"
-                        style={{
-                            backfaceVisibility: 'hidden',
-                            WebkitBackfaceVisibility: 'hidden',
-                            transform: 'rotateY(180deg)',
-                            background:
-                                'linear-gradient(135deg, #0A1E3C 0%, #071933 50%, #0B254A 100%)',
-                        }}
-                    >
-                        {/* Magnetic & Optical Stripe */}
-                        <div className="relative -mx-5 -mt-5 h-11 bg-black/80 border-b border-white/10 flex items-center justify-between px-5">
-                            <div className="flex items-center gap-2 text-[9px] font-mono text-[#38BDF8]">
-                                <Sparkles className="h-3 w-3 text-[#C9A227]" />
-                                <span>OPTICAL VARIABLE CRYPTOGRAPHIC BAR</span>
-                            </div>
-                            <span className="text-[9px] text-white/40 font-mono">ISO/IEC 7810 ID-1</span>
-                        </div>
-
-                        {/* Card Back Body */}
-                        <div className="my-auto space-y-2 text-[10px] text-white/80">
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="space-y-1">
-                                    <div className="text-[8px] font-bold uppercase tracking-wider text-[#C9A227]">
-                                        Property of the State of Papua New Guinea
-                                    </div>
-                                    <p className="text-[9px] leading-relaxed text-white/70">
-                                        This card remains the property of the Independent State of Papua New Guinea. If found, please return to any provincial police post or Civil Registry Center.
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-center shrink-0">
-                                    <div className="rounded border border-white/30 bg-white p-1 text-black shadow">
-                                        <QrCode className="h-10 w-10 text-slate-900" aria-hidden="true" />
-                                    </div>
-                                    <span className="mt-0.5 text-[8px] font-mono text-white/50">SECURE QR</span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 border-t border-white/10 pt-2 text-[9px]">
-                                <div>
-                                    <span className="text-white/50">Emergency Helpline:</span>
-                                    <div className="font-mono font-bold text-white">+675 301 3500</div>
-                                </div>
-                                <div>
-                                    <span className="text-white/50">Authorized Signature:</span>
-                                    <div className="font-serif italic text-white/90">K. Amari · Registrar General</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Machine Readable Zone (MRZ - ICAO Standard) */}
-                        <div className="rounded bg-black/60 p-2 font-mono text-[9px] tracking-widest text-[#38BDF8] select-all border border-white/10">
-                            <div className="truncate">IDPNGAMINI&lt;&lt;KILA&lt;PETER&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
-                            <div className="truncate">2690428810PNG9404147F3610174&lt;&lt;&lt;&lt;&lt;&lt;</div>
+                        >
+                            <NationalIdCardBack
+                                fullName={citizenName}
+                                idNumber={idNumber}
+                                dateOfBirth={dob}
+                                sex={sex}
+                                expiryDate={expiryDate}
+                                className="h-full w-full"
+                            />
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Interactive 3D Controls Bar */}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs">
-                <button
-                    type="button"
-                    onClick={() => setIsFlipped((f) => !f)}
-                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-primary-border bg-surface px-4 py-2 font-semibold text-primary transition hover:bg-primary-tint active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs"
-                >
-                    <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300" aria-hidden="true" />
-                    <span>{isFlipped ? 'Flip to Front View' : 'Flip to Inspect Security Back'}</span>
-                </button>
+                {/* Interactive 3D Controls Bar */}
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-sky-200/60 pt-3 text-xs">
+                    <button
+                        type="button"
+                        onClick={() => setIsFlipped((f) => !f)}
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-sky-300 bg-white px-4 py-1.5 font-bold text-navy transition hover:bg-sky-50 hover:border-sky-400 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs cursor-pointer"
+                    >
+                        <RefreshCw className="h-3.5 w-3.5 text-primary transition-transform duration-300" aria-hidden="true" />
+                        <span>{isFlipped ? 'Show Official Front' : 'Flip to Security Reverse'}</span>
+                    </button>
 
-                <div className="flex items-center gap-1.5 text-muted-foreground text-[11px]">
-                    <Shield className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
-                    <span>{isMobile ? 'Tap card to flip' : 'Move cursor over card to inspect 3D angles & holographic sheen'}</span>
+                    <div className="flex items-center gap-1.5 text-slate-600 text-[11px] font-medium">
+                        <Shield className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+                        <span>{isMobile ? 'Tap card to flip' : 'Move cursor for 3D holographic tilt'}</span>
+                    </div>
                 </div>
             </div>
         </div>

@@ -8,7 +8,9 @@ import {
     Send,
 } from 'lucide-react';
 import { useMemo, useState, type ComponentProps } from 'react';
-import NationalIdCard from '@/components/national-id-card';
+import NationalIdCard, {
+    NationalIdCardBack,
+} from '@/components/national-id-card';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -40,20 +42,36 @@ interface IdentityItem {
     };
 }
 
-/** "1988-04-14" → "14 APR 1988"; unparseable values pass through untouched. */
+/**
+ * "1988-04-14" → "14 APR 1988"; unparseable values pass through untouched.
+ * Plain dates are formatted as calendar dates and full timestamps (the API
+ * serializes dates as UTC instants) render in PNG local time, so the printed
+ * day never shifts a day early.
+ */
 function formatCardDate(
     value: string | Date | null | undefined,
 ): string | undefined {
     if (!value) return undefined;
 
     let date: Date;
+    let timeZone: string | undefined;
     if (value instanceof Date) {
         date = value;
     } else {
-        const parts = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-        date = parts
-            ? new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]))
-            : new Date(value);
+        const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        if (plain) {
+            date = new Date(
+                Date.UTC(
+                    Number(plain[1]),
+                    Number(plain[2]) - 1,
+                    Number(plain[3]),
+                ),
+            );
+            timeZone = 'UTC';
+        } else {
+            date = new Date(value);
+            timeZone = 'Pacific/Port_Moresby';
+        }
     }
 
     if (Number.isNaN(date.getTime())) {
@@ -65,6 +83,7 @@ function formatCardDate(
             day: '2-digit',
             month: 'short',
             year: 'numeric',
+            timeZone,
         })
         .toUpperCase();
 }
@@ -94,8 +113,123 @@ function MetaCell({ label, value }: { label: string; value: string }) {
     );
 }
 
+/** Card inspection dialog with interactive Front and Security Reverse (Back) toggle */
+function CardInspectionDialog({
+    name,
+    item,
+    cardProps,
+    cardStatus,
+    sex,
+    cardExpiry,
+}: {
+    name: string;
+    item: IdentityItem;
+    cardProps: ComponentProps<typeof NationalIdCard>;
+    cardStatus: string;
+    sex: string;
+    cardExpiry?: string;
+}) {
+    const [side, setSide] = useState<'front' | 'back'>('front');
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <button
+                    type="button"
+                    aria-label={`Inspect the national ID card for ${name}`}
+                    className="group/card relative block w-full max-w-[360px] cursor-zoom-in rounded-xl text-left focus-visible:ring-2 focus-visible:ring-[#0052CC]/70 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                    <NationalIdCard {...cardProps} />
+                    <span className="absolute -top-2 -right-2 z-10 flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition group-hover/card:border-[#0052CC] group-hover/card:text-[#0052CC] group-focus-visible/card:border-[#0052CC] group-focus-visible/card:text-[#0052CC]">
+                        <Maximize2 className="size-3.5" />
+                    </span>
+                </button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100vw-2rem)] gap-4 overflow-y-auto rounded-2xl border-slate-200/80 bg-white p-5 shadow-2xl sm:max-w-[900px]">
+                <DialogHeader>
+                    <DialogTitle className="text-base font-bold text-[#0F2644]">
+                        Card Inspection — {name}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-slate-500">
+                        Canonical PNG National Identity Card template · BioSure
+                        ID {item.biosure_id_number ?? 'not yet minted'} ·{' '}
+                        {cardStatus}
+                    </DialogDescription>
+                </DialogHeader>
+
+                {/* Front / Back Toggle Tabs */}
+                <div className="flex justify-center gap-2 border-b border-slate-100 pb-2">
+                    <button
+                        type="button"
+                        onClick={() => setSide('front')}
+                        className={`cursor-pointer rounded-lg px-4 py-1.5 text-xs font-bold transition ${
+                            side === 'front'
+                                ? 'bg-[#0052CC] text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                        Front Side (Canonical Identity)
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setSide('back')}
+                        className={`cursor-pointer rounded-lg px-4 py-1.5 text-xs font-bold transition ${
+                            side === 'back'
+                                ? 'bg-[#0052CC] text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                        Back Side (Security Reverse &amp; MRZ)
+                    </button>
+                </div>
+
+                <div className="mx-auto w-full max-w-[min(840px,calc((100dvh_-_21rem)*1.586))]">
+                    {side === 'front' ? (
+                        <NationalIdCard {...cardProps} />
+                    ) : (
+                        <NationalIdCardBack
+                            fullName={name}
+                            idNumber={
+                                item.biosure_id_number ??
+                                'PENDING PERSONALIZATION'
+                            }
+                            dateOfBirth={cardProps.dateOfBirth}
+                            sex={sex}
+                            expiryDate={cardExpiry}
+                            mobile={item.registrant.mobile}
+                            status={item.status}
+                        />
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                    <MetaCell
+                        label="Date of Birth"
+                        value={cardProps.dateOfBirth ?? '—'}
+                    />
+                    <MetaCell label="Sex" value={sex} />
+                    <MetaCell
+                        label="Card Expiry"
+                        value={cardExpiry ?? 'Ten years after personalization'}
+                    />
+                    <MetaCell
+                        label="Personalized"
+                        value={
+                            item.card_personalized_at
+                                ? new Date(
+                                      item.card_personalized_at,
+                                  ).toLocaleDateString()
+                                : 'Awaiting'
+                        }
+                    />
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function Issuance({
-    identities = [],
+    identities,
     stats,
 }: {
     identities: IdentityItem[];
@@ -360,75 +494,15 @@ export default function Issuance({
                                         </div>
                                     </div>
 
-                                    {/* Smart card preview — click to inspect at full size */}
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <button
-                                                type="button"
-                                                aria-label={`Inspect the national ID card for ${name}`}
-                                                className="group/card relative block w-full max-w-[360px] cursor-zoom-in rounded-xl text-left focus-visible:ring-2 focus-visible:ring-[#0052CC]/70 focus-visible:ring-offset-2 focus-visible:outline-none"
-                                            >
-                                                <NationalIdCard
-                                                    {...cardProps}
-                                                />
-                                                <span className="absolute -top-2 -right-2 z-10 flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition group-hover/card:border-[#0052CC] group-hover/card:text-[#0052CC] group-focus-visible/card:border-[#0052CC] group-focus-visible/card:text-[#0052CC]">
-                                                    <Maximize2 className="size-3.5" />
-                                                </span>
-                                            </button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100vw-2rem)] gap-4 overflow-y-auto rounded-2xl border-slate-200/80 bg-white p-5 shadow-2xl sm:max-w-[900px]">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-base font-bold text-[#0F2644]">
-                                                    Card Inspection — {name}
-                                                </DialogTitle>
-                                                <DialogDescription className="text-xs text-slate-500">
-                                                    Canonical PNG National
-                                                    Identity Card template ·
-                                                    BioSure ID{' '}
-                                                    {item.biosure_id_number ??
-                                                        'not yet minted'}{' '}
-                                                    · {cardStatus}
-                                                </DialogDescription>
-                                            </DialogHeader>
-
-                                            <div className="mx-auto w-full max-w-[min(840px,calc((100dvh_-_19rem)*1.586))]">
-                                                <NationalIdCard
-                                                    {...cardProps}
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                                                <MetaCell
-                                                    label="Date of Birth"
-                                                    value={
-                                                        cardProps.dateOfBirth ??
-                                                        '—'
-                                                    }
-                                                />
-                                                <MetaCell
-                                                    label="Sex"
-                                                    value={sex}
-                                                />
-                                                <MetaCell
-                                                    label="Card Expiry"
-                                                    value={
-                                                        cardExpiry ??
-                                                        'Ten years after personalization'
-                                                    }
-                                                />
-                                                <MetaCell
-                                                    label="Personalized"
-                                                    value={
-                                                        item.card_personalized_at
-                                                            ? new Date(
-                                                                  item.card_personalized_at,
-                                                              ).toLocaleDateString()
-                                                            : 'Awaiting'
-                                                    }
-                                                />
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                    {/* Smart card preview — click to inspect both front & sovereign back at full size */}
+                                    <CardInspectionDialog
+                                        name={name}
+                                        item={item}
+                                        cardProps={cardProps}
+                                        cardStatus={cardStatus}
+                                        sex={sex}
+                                        cardExpiry={cardExpiry}
+                                    />
                                 </div>
 
                                 {/* Right: Action Cockpit */}

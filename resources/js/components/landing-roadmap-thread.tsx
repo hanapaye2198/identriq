@@ -672,12 +672,16 @@ export default function LandingRoadmapThread() {
                                 3D Polycarbonate Smart Card · Interactive Simulation
                             </div>
                             <SmartCard3D
-                                citizenName="AMINI, KILA PETER"
-                                idNumber="PNG-2026-9042-8810"
-                                dob="14 APR 1994"
+                                citizenName="KUMAL, JOHN A."
+                                idNumber="785-3049-921-A"
+                                dob="14 APR 1988"
                                 province="CENTRAL PROVINCE"
-                                sex="F"
-                                expiryDate="14 APR 2036"
+                                sex="M"
+                                nationality="PAPUA NEW GUINEA"
+                                expiryDate="24 OCT 2031"
+                                authority="PNG CIVIL REGISTRY"
+                                signatureName="John Kumal."
+                                photoSrc="/images/john-kumal-portrait-hd.png"
                             />
                         </div>
                     </div>

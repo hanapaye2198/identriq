@@ -455,7 +455,7 @@ export default function Welcome() {
                     {/* =========================================================================
                         SCREEN 2: ROADMAP STEP-BY-STEP PRE-REGISTRATION (AFTER USER SCROLLS)
                        ========================================================================= */}
-                    <section id="roadmap" className="scroll-mt-6 bg-surface py-12 sm:py-20 border-b border-line">
+                    <section id="roadmap-container" className="scroll-mt-6 bg-surface py-12 sm:py-20 border-b border-line">
                         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-12">
                             <LandingRoadmapThread />
                         </div>

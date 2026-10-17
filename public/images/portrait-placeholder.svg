@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150" role="img" aria-label="Citizen photo placeholder">
+  <defs>
+    <linearGradient id="pp-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef2f6"/>
+      <stop offset="1" stop-color="#d3dce6"/>
+    </linearGradient>
+    <linearGradient id="pp-figure" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a9b7c6"/>
+      <stop offset="1" stop-color="#7e90a3"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="150" fill="url(#pp-bg)"/>
+  <circle cx="60" cy="54" r="26" fill="url(#pp-figure)"/>
+  <path d="M60 84 C 34 84 13 101 9 126 L 7 150 L 113 150 L 111 126 C 107 101 86 84 60 84 Z" fill="url(#pp-figure)"/>
+</svg>

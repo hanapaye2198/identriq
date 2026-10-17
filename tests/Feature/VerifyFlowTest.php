@@ -56,3 +56,42 @@ test('biometric match is deterministic and logged', function () {
     expect($first['score'])->toBe($second['score'])
         ->and(AuthEvent::where('identity_id', $identity->id)->where('mode', 'online_biometric')->count())->toBe(2);
 });
+
+test('suspended and revoked credentials are refused by offline check', function () {
+    $this->seed(IdentriqSeeder::class);
+    $identity = Identity::whereNotNull('biosure_id_number')->first();
+    $token = Appointment::where('registrant_id', $identity->registrant_id)->first()->qr_token;
+
+    $identity->update(['suspended_at' => now()]);
+    $this->postJson(route('verify.check'), ['token' => $token])
+        ->assertOk()->assertJson(['valid' => false, 'state' => 'suspended']);
+
+    $identity->update(['revoked_at' => now()]);
+    $this->postJson(route('verify.check'), ['token' => $token])
+        ->assertOk()->assertJson(['valid' => false, 'state' => 'revoked']);
+});
+
+test('verifier snapshot exposes credential states', function () {
+    $this->seed(IdentriqSeeder::class);
+
+    $response = $this->getJson(route('verify.snapshot'))
+        ->assertOk()
+        ->assertJsonStructure(['generated_at', 'credentials' => [['token', 'name', 'biosure', 'state', 'issued_at']]]);
+
+    $states = collect($response->json('credentials'))->pluck('state');
+
+    expect($states)->toContain('active')->toContain('revoked')->toContain('pending');
+});
+
+test('outbox sync records purpose on the audit event', function () {
+    $this->seed(IdentriqSeeder::class);
+    $token = Appointment::first()->qr_token;
+
+    $this->postJson(route('verify.sync'), ['events' => [
+        ['token' => $token, 'result' => 'invalid', 'at' => now()->toISOString(), 'purpose' => 'Bank onboarding', 'reason' => 'Suspended'],
+    ]])->assertOk()->assertJson(['synced' => 1]);
+
+    $event = AuthEvent::latest('id')->first();
+    expect($event->metadata['purpose'] ?? null)->toBe('Bank onboarding')
+        ->and($event->metadata['reason'] ?? null)->toBe('Suspended');
+});

@@ -63,14 +63,23 @@ export default function DemoBar() {
                     </button>
                 ))}
             </div>
-            <button
-                type="button"
-                onClick={resetDemo}
-                disabled={resetting}
-                className="ml-auto rounded px-2 py-0.5 text-white/60 hover:text-white disabled:opacity-50"
-            >
-                {resetting ? 'Resetting…' : 'Reset demo'}
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+                <a
+                    href="/login"
+                    className="rounded px-2 py-0.5 text-sky-300 hover:text-white font-semibold transition"
+                >
+                    Station Login →
+                </a>
+                <span className="text-white/20">|</span>
+                <button
+                    type="button"
+                    onClick={resetDemo}
+                    disabled={resetting}
+                    className="rounded px-2 py-0.5 text-white/60 hover:text-white disabled:opacity-50"
+                >
+                    {resetting ? 'Resetting…' : 'Reset demo'}
+                </button>
+            </div>
         </div>
     );
 }

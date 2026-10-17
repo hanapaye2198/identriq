@@ -97,12 +97,16 @@ export default function DigitalShowcase3D() {
 
                         <div className="w-full flex justify-center py-2">
                             <SmartCard3D
-                                citizenName="AMINI, KILA PETER"
-                                idNumber="PNG-2026-9042-8810"
-                                dob="14 APR 1994"
+                                citizenName="KUMAL, JOHN A."
+                                idNumber="785-3049-921-A"
+                                dob="14 APR 1988"
                                 province="CENTRAL PROVINCE"
-                                sex="F"
-                                expiryDate="14 APR 2036"
+                                sex="M"
+                                nationality="PAPUA NEW GUINEA"
+                                expiryDate="24 OCT 2031"
+                                authority="PNG CIVIL REGISTRY"
+                                signatureName="John Kumal."
+                                photoSrc="/images/john-kumal-portrait-hd.png"
                                 className="w-full"
                             />
                         </div>
@@ -170,9 +174,9 @@ export default function DigitalShowcase3D() {
                                     <div className="mt-3 flex items-center gap-3">
                                         <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-gold/40 bg-navy">
                                             <img
-                                                src="/images/png-hero-photo.png"
-                                                alt="Amini Kila Peter"
-                                                className="h-full w-full object-cover"
+                                                src="/images/john-kumal-portrait-hd.png"
+                                                alt="Kumal, John A."
+                                                className="h-full w-full object-cover object-top"
                                             />
                                             <div className="absolute bottom-0 inset-x-0 bg-gold/90 text-center text-[7px] font-black text-navy uppercase">
                                                 CITIZEN
@@ -181,8 +185,8 @@ export default function DigitalShowcase3D() {
 
                                         <div className="min-w-0 flex-1">
                                             <p className="text-[10px] text-white/50 uppercase tracking-wider">Citizen Full Name</p>
-                                            <p className="truncate text-xs font-extrabold text-white">AMINI, KILA PETER</p>
-                                            <p className="text-[10px] font-mono text-gold mt-0.5">PNG-2026-9042-8810</p>
+                                            <p className="truncate text-xs font-extrabold text-white">KUMAL, JOHN A.</p>
+                                            <p className="text-[10px] font-mono text-gold mt-0.5">785-3049-921-A</p>
                                         </div>
                                     </div>
 

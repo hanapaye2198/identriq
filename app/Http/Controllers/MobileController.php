@@ -31,6 +31,8 @@ class MobileController extends Controller
         $registrant = Registrant::where('mobile', $data['mobile'])->first();
         abort_if(! $registrant, 404, 'No registration found.');
         abort_unless(cache()->get("otp:{$data['mobile']}") === $data['otp'], 422, 'Incorrect or expired code.');
+        // Single-use: a successfully linked OTP can never be replayed.
+        cache()->forget("otp:{$data['mobile']}");
 
         $registrant->update(['mobile_verified_at' => now()]);
 
@@ -38,6 +40,38 @@ class MobileController extends Controller
             'token' => $registrant->createToken('wallet')->plainTextToken,
             'registrant_id' => $registrant->id,
         ]);
+    }
+
+    public function unlink(Request $request): JsonResponse
+    {
+        /** @var Registrant $registrant */
+        $registrant = $request->user();
+        $registrant->currentAccessToken()?->delete();
+        auth()->forgetGuards();
+
+        return response()->json(['revoked' => true]);
+    }
+
+    public function reportLost(Request $request): JsonResponse
+    {
+        /** @var Registrant $registrant */
+        $registrant = $request->user();
+        $identity = $registrant->identity;
+
+        abort_if(! $identity, 422, 'No issued credential to suspend.');
+
+        if (! $identity->suspended_at && ! $identity->revoked_at) {
+            $identity->update(['suspended_at' => now()]);
+
+            $registrant->notifications()->create([
+                'channel' => 'sms',
+                'title' => 'ID suspended',
+                'body' => 'Your IDENTRIQ ID was suspended after a lost/stolen report. Request a replacement to get back online.',
+                'sent_at' => now(),
+            ]);
+        }
+
+        return response()->json(['state' => $identity->fresh()->credentialState()]);
     }
 
     public function identity(Request $request): JsonResponse
@@ -49,9 +83,12 @@ class MobileController extends Controller
         return response()->json([
             'full_name' => $registrant->demographic?->full_name,
             'dob' => $registrant->demographic?->dob,
+            'gender' => $registrant->demographic?->gender,
             'mobile' => $registrant->mobile,
             'status' => $registrant->status,
+            'credential_state' => $registrant->identity?->credentialState() ?? 'not_issued',
             'biosure_id_number' => $registrant->identity?->biosure_id_number,
+            'card_personalized_at' => $registrant->identity?->card_personalized_at,
             'qr_token' => $registrant->appointments->first()?->qr_token,
         ]);
     }

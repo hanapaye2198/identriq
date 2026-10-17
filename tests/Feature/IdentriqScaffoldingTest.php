@@ -9,9 +9,10 @@ test('demo seeder plants the phase 0 dataset', function () {
     $this->seed(IdentriqSeeder::class);
 
     expect(RegistrationCenter::count())->toBeGreaterThanOrEqual(2)
-        ->and(Registrant::count())->toBe(12)
+        ->and(Registrant::count())->toBe(13) // 12 lifecycle citizens + 1 revoked-compromise demo credential
         ->and(Identity::where('status', 'approved')->count())->toBeGreaterThanOrEqual(1)
         ->and(Identity::where('status', 'failed')->count())->toBe(1)
+        ->and(Identity::whereNotNull('revoked_at')->count())->toBe(1)
         ->and(Identity::whereNotNull('delivered_at')->count())->toBe(1);
 });
 

@@ -14,6 +14,11 @@ class VerifyController extends Controller
 {
     public function offline(Request $request): Response
     {
+        // Demo trade-off, intentionally kept (decision D3, 2026-10-17): the
+        // snapshot ships to the client unauthenticated so the offline demo works
+        // without a login. It exposes token/name/BioSure pairs to anyone opening
+        // this page — fine for the local demo; revisit (auth + signed payloads)
+        // before any public deployment.
         return Inertia::render('verify/offline', [
             'token' => $request->query('token', ''),
             'snapshot' => Appointment::with('registrant.demographic', 'registrant.identity')
@@ -23,6 +28,7 @@ class VerifyController extends Controller
                     'token' => $a->qr_token,
                     'name' => $a->registrant->demographic?->full_name,
                     'biosure' => $a->registrant->identity?->biosure_id_number,
+                    'state' => $a->registrant->identity?->credentialState() ?? 'not_issued',
                 ]),
         ]);
     }
@@ -34,21 +40,41 @@ class VerifyController extends Controller
             ->where('qr_token', $data['token'])->first();
 
         if (! $appointment || ! $appointment->registrant->identity) {
-            return response()->json(['valid' => false, 'reason' => 'Unknown token or identity not issued.']);
+            return response()->json([
+                'valid' => false,
+                'state' => 'not_issued',
+                'reason' => 'Unknown token or identity not issued.',
+            ]);
         }
 
         $identity = $appointment->registrant->identity;
+        $state = $identity->credentialState();
+        $valid = $state === 'active';
+        $reason = match ($state) {
+            'suspended' => 'Credential suspended — reported lost or stolen.',
+            'revoked' => 'Credential revoked by IDENTRIQ.',
+            'pending' => 'Credential not yet issued.',
+            'failed' => 'Credential application failed.',
+            default => null,
+        };
+
         AuthEvent::create([
             'identity_id' => $identity->id,
             'mode' => 'offline_qr',
-            'result' => 'valid',
+            'result' => $valid ? 'valid' : 'invalid',
             'verifier_ref' => $request->input('verifier_ref', 'web-offline'),
+            'metadata' => array_filter([
+                'state' => $state,
+                'reason' => $reason,
+            ]),
         ]);
 
         return response()->json([
-            'valid' => true,
+            'valid' => $valid,
+            'state' => $state,
             'name' => $appointment->registrant->demographic?->full_name,
             'biosure' => $identity->biosure_id_number,
+            'reason' => $reason,
         ]);
     }
 
@@ -59,6 +85,8 @@ class VerifyController extends Controller
             'events.*.token' => 'required|string',
             'events.*.result' => 'required|in:valid,invalid',
             'events.*.at' => 'nullable|date',
+            'events.*.purpose' => 'nullable|string|max:100',
+            'events.*.reason' => 'nullable|string|max:255',
         ]);
 
         $synced = 0;
@@ -70,13 +98,42 @@ class VerifyController extends Controller
                     'mode' => 'offline_qr',
                     'result' => $event['result'],
                     'verifier_ref' => 'outbox-sync',
-                    'metadata' => ['checked_at' => $event['at'] ?? null],
+                    'metadata' => array_filter([
+                        'checked_at' => $event['at'] ?? null,
+                        'purpose' => $event['purpose'] ?? null,
+                        'reason' => $event['reason'] ?? null,
+                    ]),
                 ]);
                 $synced++;
             }
         }
 
         return response()->json(['synced' => $synced]);
+    }
+
+    public function snapshot(): JsonResponse
+    {
+        // Powers the mobile authenticator's on-device trust / revocation lists.
+        // Same demo trade-off as offline() (decision D3): unauthenticated read
+        // model (token/name/BIOSURE/state) so the offline demo works without a
+        // login; revisit before any public deployment.
+        $credentials = Appointment::with('registrant.demographic', 'registrant.identity')
+            ->where('status', '!=', 'cancelled')
+            ->whereHas('registrant.identity')
+            ->get()
+            ->map(fn ($a) => [
+                'token' => $a->qr_token,
+                'name' => $a->registrant->demographic?->full_name,
+                'biosure' => $a->registrant->identity?->biosure_id_number,
+                'state' => $a->registrant->identity?->credentialState() ?? 'not_issued',
+                'issued_at' => $a->registrant->identity?->card_personalized_at?->toISOString(),
+            ])
+            ->values();
+
+        return response()->json([
+            'generated_at' => now()->toISOString(),
+            'credentials' => $credentials,
+        ]);
     }
 
     public function online(): Response

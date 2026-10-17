@@ -9,6 +9,7 @@ interface SnapshotRow {
     token: string;
     name: string | null;
     biosure: string | null;
+    state: string;
 }
 
 interface Queued {
@@ -19,20 +20,52 @@ interface Queued {
 
 function loadOutbox(): Queued[] {
     try {
-        return JSON.parse(localStorage.getItem('verify_outbox') ?? '[]') as Queued[];
+        return JSON.parse(
+            localStorage.getItem('verify_outbox') ?? '[]',
+        ) as Queued[];
     } catch {
         return [];
     }
 }
 
-export default function Offline({ token, snapshot }: { token: string; snapshot: SnapshotRow[] }) {
+function reasonFor(state: string): string | undefined {
+    switch (state) {
+        case 'suspended':
+            return 'Credential suspended — reported lost or stolen.';
+        case 'revoked':
+            return 'Credential revoked by IDENTRIQ.';
+        case 'pending':
+            return 'Credential not yet issued.';
+        case 'failed':
+            return 'Credential application failed validation.';
+        default:
+            return undefined;
+    }
+}
+
+export default function Offline({
+    token,
+    snapshot,
+}: {
+    token: string;
+    snapshot: SnapshotRow[];
+}) {
     const [input, setInput] = useState(token);
-    const [verdict, setVerdict] = useState<{ valid: boolean; name?: string; biosure?: string; reason?: string; offline?: boolean } | null>(null);
+    const [verdict, setVerdict] = useState<{
+        valid: boolean;
+        name?: string;
+        biosure?: string;
+        reason?: string;
+        offline?: boolean;
+    } | null>(null);
     const [outbox, setOutbox] = useState<Queued[]>(loadOutbox);
     const [online, setOnline] = useState(navigator.onLine);
 
     function queue(tokenValue: string, result: 'valid' | 'invalid') {
-        const next = [...loadOutbox(), { token: tokenValue, result, at: new Date().toISOString() }];
+        const next = [
+            ...loadOutbox(),
+            { token: tokenValue, result, at: new Date().toISOString() },
+        ];
         localStorage.setItem('verify_outbox', JSON.stringify(next));
         setOutbox(next);
     }
@@ -40,22 +73,45 @@ export default function Offline({ token, snapshot }: { token: string; snapshot: 
     async function verify() {
         const row = snapshot.find((s) => s.token === input.trim());
         if (!navigator.onLine) {
-            const ok = !!row?.biosure;
-            setVerdict({ valid: ok, name: row?.name ?? undefined, biosure: row?.biosure ?? undefined, reason: ok ? undefined : 'Unknown token (offline snapshot).', offline: true });
+            const ok = row?.state === 'active';
+            setVerdict({
+                valid: ok,
+                name: row?.name ?? undefined,
+                biosure: row?.biosure ?? undefined,
+                reason: row
+                    ? reasonFor(row.state)
+                    : 'Unknown token (offline snapshot).',
+                offline: true,
+            });
             queue(input.trim(), ok ? 'valid' : 'invalid');
             return;
         }
         try {
             const res = await fetch('/verify/offline/check', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken() },
-                body: JSON.stringify({ token: input.trim(), verifier_ref: 'web-offline' }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({
+                    token: input.trim(),
+                    verifier_ref: 'web-offline',
+                }),
             });
             setVerdict(await res.json());
         } catch {
             setOnline(false);
-            const ok = !!row?.biosure;
-            setVerdict({ valid: ok, offline: true });
+            const ok = row?.state === 'active';
+            setVerdict({
+                valid: ok,
+                name: row?.name ?? undefined,
+                biosure: row?.biosure ?? undefined,
+                reason: row
+                    ? reasonFor(row.state)
+                    : 'Unknown token (offline snapshot).',
+                offline: true,
+            });
             queue(input.trim(), ok ? 'valid' : 'invalid');
         }
     }
@@ -64,7 +120,11 @@ export default function Offline({ token, snapshot }: { token: string; snapshot: 
         const pending = loadOutbox();
         const res = await fetch('/verify/outbox/sync', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
             body: JSON.stringify({ events: pending }),
         });
         const j = await res.json();
@@ -80,29 +140,62 @@ export default function Offline({ token, snapshot }: { token: string; snapshot: 
             <div className="min-h-screen bg-[#0E2A26] px-4 py-10 text-white sm:px-8">
                 <div className="mx-auto max-w-lg text-center">
                     <p className="text-sm text-white/60">
-                        {online ? 'Online' : 'OFFLINE — verifying from on-device snapshot, zero network calls'}
+                        {online
+                            ? 'Online'
+                            : 'OFFLINE — verifying from on-device snapshot, zero network calls'}
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold">Verify credential</h1>
+                    <h1 className="mt-2 text-3xl font-bold">
+                        Verify credential
+                    </h1>
                     <div className="mt-6 rounded-2xl bg-white p-5 text-[#14201B]">
                         <Label>QR token</Label>
-                        <Input value={input} onChange={(e) => setInput(e.target.value)} className="mt-1 font-mono" placeholder="paste or scan token" />
-                        <Button onClick={verify} className="mt-3 w-full bg-[#2FD6A3] text-lg font-bold text-[#0E2A26] hover:brightness-110">
+                        <Input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            className="mt-1 font-mono"
+                            placeholder="paste or scan token"
+                        />
+                        <Button
+                            onClick={verify}
+                            className="mt-3 w-full bg-[#2FD6A3] text-lg font-bold text-[#0E2A26] hover:brightness-110"
+                        >
                             Verify
                         </Button>
                     </div>
                     {verdict && (
-                        <div className={`mt-4 rounded-2xl p-6 ${verdict.valid ? 'bg-[#2FD6A3]' : 'bg-red-600'} text-[#0E2A26]`}>
-                            <p className="text-4xl font-black">{verdict.valid ? 'VALID' : 'INVALID'}</p>
-                            {verdict.name && <p className="mt-1 font-semibold">{verdict.name}</p>}
-                            {verdict.biosure && <p className="font-mono">{verdict.biosure}</p>}
-                            {verdict.reason && <p className="mt-1 text-sm">{verdict.reason}</p>}
-                            {verdict.offline && <p className="mt-1 text-xs opacity-70">Checked offline · queued for sync</p>}
+                        <div
+                            className={`mt-4 rounded-2xl p-6 ${verdict.valid ? 'bg-[#2FD6A3] text-[#0E2A26]' : 'bg-red-600 text-white'}`}
+                        >
+                            <p className="text-4xl font-black">
+                                {verdict.valid ? 'VALID' : 'INVALID'}
+                            </p>
+                            {verdict.name && (
+                                <p className="mt-1 font-semibold">
+                                    {verdict.name}
+                                </p>
+                            )}
+                            {verdict.biosure && (
+                                <p className="font-mono">{verdict.biosure}</p>
+                            )}
+                            {verdict.reason && (
+                                <p className="mt-1 text-sm">{verdict.reason}</p>
+                            )}
+                            {verdict.offline && (
+                                <p className="mt-1 text-xs opacity-70">
+                                    Checked offline · queued for sync
+                                </p>
+                            )}
                         </div>
                     )}
                     {outbox.length > 0 && (
                         <div className="mt-4 rounded-2xl bg-white/10 p-4 text-sm">
                             <p>{outbox.length} check(s) queued for sync</p>
-                            <Button onClick={sync} size="sm" variant="outline" className="mt-2 text-white">
+                            <Button
+                                onClick={sync}
+                                size="sm"
+                                variant="outline"
+                                className="mt-2 text-white"
+                            >
                                 Sync now
                             </Button>
                         </div>

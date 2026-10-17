@@ -34,7 +34,7 @@ export default function Setup({ centers, stats }: { centers: Center[]; stats?: S
     }
 
     return (
-        <StaffLayout stats={stats}>
+        <StaffLayout stats={stats} centers={centers}>
             <Head title="Center Setup &amp; Capacity · Staff Station" />
 
             <div className="p-6 sm:p-8">

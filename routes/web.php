@@ -34,7 +34,6 @@ Route::inertia('/m/wallet', 'm/wallet')->name('m.wallet');
 Route::inertia('/m/verify', 'm/verifier')->name('m.verify');
 
 Route::get('/staff', [StaffController::class, 'queue'])->name('staff.queue');
-Route::get('/staff/rework', [StaffController::class, 'rework'])->name('staff.rework');
 Route::post('/staff/appointments/{appointment}/checkin', [StaffController::class, 'checkin'])->name('staff.checkin');
 Route::post('/staff/walkin', [StaffController::class, 'walkin'])->name('staff.walkin');
 Route::get('/staff/capture/{appointment}', [StaffController::class, 'capture'])->name('staff.capture');

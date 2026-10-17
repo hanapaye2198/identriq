@@ -7,7 +7,6 @@ import {
     Clock,
     MapPin,
     Phone,
-    Plus,
     Search,
     UserCheck,
     Users,
@@ -17,7 +16,6 @@ import { useState } from 'react';
 import StaffLayout, { StaffStats } from '@/layouts/staff-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface Appointment {
     id: number;
@@ -68,13 +66,8 @@ export default function Queue({
     const [q, setQ] = useState(search);
     const [activeDate, setActiveDate] = useState(date);
     const [centerFilter, setCenterFilter] = useState<number | 'all'>(selectedCenterId ?? 'all');
-    const [showWalkin, setShowWalkin] = useState(false);
 
-    // Walk-in form state
-    const [wName, setWName] = useState('');
-    const [wMobile, setWMobile] = useState('+675');
-    const [wCenter, setWCenter] = useState(centers[0]?.id ?? 1);
-    const [walkinError, setWalkinError] = useState<string | null>(null);
+    const isRework = filter === 'rework';
 
     const todayStr = new Date().toISOString().split('T')[0];
     const tomorrowDate = new Date(Date.now() + 86400000);
@@ -84,11 +77,25 @@ export default function Queue({
 
     function applyFilters(newDate = activeDate, newCenter = centerFilter, newQ = q) {
         router.get(
-            filter === 'rework' ? '/staff/rework' : '/staff',
+            '/staff',
             {
                 date: newDate,
                 center_id: newCenter === 'all' ? undefined : newCenter,
                 q: newQ || undefined,
+                filter: isRework ? 'rework' : undefined,
+            },
+            { preserveState: true }
+        );
+    }
+
+    function toggleReworkFilter() {
+        router.get(
+            '/staff',
+            {
+                date: activeDate,
+                center_id: centerFilter === 'all' ? undefined : centerFilter,
+                q: q || undefined,
+                filter: isRework ? undefined : 'rework',
             },
             { preserveState: true }
         );
@@ -96,7 +103,16 @@ export default function Queue({
 
     function handleDateTab(d: string) {
         setActiveDate(d);
-        applyFilters(d, centerFilter, q);
+        // Picking a date exits the rework lens — dates don't apply to the rework tray.
+        router.get(
+            '/staff',
+            {
+                date: d,
+                center_id: centerFilter === 'all' ? undefined : centerFilter,
+                q: q || undefined,
+            },
+            { preserveState: true }
+        );
     }
 
     function handleCenterChange(cId: number | 'all') {
@@ -114,53 +130,9 @@ export default function Queue({
         applyFilters(activeDate, centerFilter, '');
     }
 
-    function submitWalkin(e: React.FormEvent) {
-        e.preventDefault();
-        setWalkinError(null);
-
-        // Normalize mobile
-        let mobile = wMobile.trim();
-        if (!mobile.startsWith('+675') && /^\d{7}$/.test(mobile)) {
-            mobile = '+675' + mobile;
-        }
-
-        if (!wName.trim()) {
-            setWalkinError('Please enter applicant full name.');
-            return;
-        }
-        if (!/^\+675\d{7}$/.test(mobile)) {
-            setWalkinError('Mobile must be in PNG format (+675 followed by 7 digits, e.g. +6757123456).');
-            return;
-        }
-
-        router.post(
-            '/staff/walkin',
-            {
-                full_name: wName.trim(),
-                mobile: mobile,
-                center_id: wCenter,
-            },
-            {
-                onError: (errors) => {
-                    const first = Object.values(errors)[0];
-                    setWalkinError(typeof first === 'string' ? first : 'Walk-in registration failed.');
-                },
-                onSuccess: () => {
-                    setShowWalkin(false);
-                    setWName('');
-                    setWMobile('+675');
-                },
-            }
-        );
-    }
-
     return (
-        <StaffLayout
-            stats={stats}
-            currentCenterName={currentCenter?.name}
-            onOpenWalkin={() => setShowWalkin(true)}
-        >
-            <Head title={filter === 'rework' ? 'Rework Queue · Staff Station' : 'Live Enrolment Queue · Staff Station'} />
+        <StaffLayout stats={stats} currentCenterName={currentCenter?.name} centers={centers}>
+            <Head title={isRework ? 'Needs Rework · Live Queue · Staff Station' : 'Live Enrolment Queue · Staff Station'} />
 
             <div className="p-6 sm:p-8">
                 {/* Header Title & Top Controls */}
@@ -168,15 +140,15 @@ export default function Queue({
                     <div>
                         <div className="flex items-center gap-2.5">
                             <h1 className="text-2xl font-bold tracking-tight text-[#0F2644] sm:text-3xl">
-                                {filter === 'rework' ? 'Rework Queue' : 'Live Enrolment Queue'}
+                                Live Enrolment Queue
                             </h1>
                             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-[#0052CC]">
                                 {appointments.length} {appointments.length === 1 ? 'applicant' : 'applicants'}
                             </span>
                         </div>
                         <p className="mt-1 text-sm text-slate-500">
-                            {filter === 'rework'
-                                ? 'Applicants requiring document re-verification or biometric recapture.'
+                            {isRework
+                                ? 'Filtered view — applicants flagged for document re-verification or biometric recapture.'
                                 : 'Active citizen appointments ready for desk check-in and biometric capture.'}
                         </p>
                     </div>
@@ -200,16 +172,6 @@ export default function Queue({
                                 ))}
                             </select>
                         </div>
-
-                        {/* Walk-in Button */}
-                        <Button
-                            type="button"
-                            onClick={() => setShowWalkin(true)}
-                            className="h-10 gap-2 rounded-xl bg-[#0052CC] px-4 font-semibold text-white shadow-xs hover:bg-[#0047B3]"
-                        >
-                            <Plus className="size-4" />
-                            <span>+ Walk-in Citizen</span>
-                        </Button>
                     </div>
                 </div>
 
@@ -221,7 +183,7 @@ export default function Queue({
                             type="button"
                             onClick={() => handleDateTab('all')}
                             className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
-                                activeDate === 'all'
+                                activeDate === 'all' && !isRework
                                     ? 'bg-[#0052CC] text-white shadow-xs'
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F2644]'
                             }`}
@@ -232,7 +194,7 @@ export default function Queue({
                             type="button"
                             onClick={() => handleDateTab(todayStr)}
                             className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
-                                activeDate === todayStr
+                                activeDate === todayStr && !isRework
                                     ? 'bg-[#0052CC] text-white shadow-xs'
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F2644]'
                             }`}
@@ -243,7 +205,7 @@ export default function Queue({
                             type="button"
                             onClick={() => handleDateTab(tomorrowStr)}
                             className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
-                                activeDate === tomorrowStr
+                                activeDate === tomorrowStr && !isRework
                                     ? 'bg-[#0052CC] text-white shadow-xs'
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F2644]'
                             }`}
@@ -259,6 +221,22 @@ export default function Queue({
                                 onChange={(e) => handleDateTab(e.target.value || 'all')}
                                 className="h-8 rounded-lg border border-slate-200 px-2 text-xs font-medium text-slate-700 focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC]"
                             />
+                        </div>
+
+                        <div className="ml-1 flex items-center gap-1.5 border-l border-slate-200 pl-2">
+                            <button
+                                type="button"
+                                onClick={toggleReworkFilter}
+                                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition ${
+                                    isRework
+                                        ? 'bg-amber-600 text-white shadow-xs'
+                                        : 'text-amber-700 hover:bg-amber-50'
+                                }`}
+                                title="Show only applicants flagged for rework"
+                            >
+                                <AlertTriangle className="size-3.5" />
+                                <span>Needs Rework ({stats?.rework_count ?? 0})</span>
+                            </button>
                         </div>
                     </div>
 
@@ -299,24 +277,21 @@ export default function Queue({
                             <div className="flex size-14 items-center justify-center rounded-full bg-blue-50 text-[#0052CC]">
                                 <Users className="size-7" />
                             </div>
-                            <h3 className="mt-4 text-base font-bold text-[#0F2644]">No appointments found</h3>
+                            <h3 className="mt-4 text-base font-bold text-[#0F2644]">
+                                {isRework ? 'No applicants flagged for rework' : 'No appointments found'}
+                            </h3>
                             <p className="mt-1 max-w-sm text-sm text-slate-500">
-                                There are no appointments matching the selected filters. Try choosing &quot;All Dates&quot;
-                                or check in a walk-in citizen.
+                                {isRework
+                                    ? 'Every applicant has passed verification — the rework tray is clear.'
+                                    : 'There are no appointments matching the selected filters. Try choosing "All Dates".'}
                             </p>
                             <div className="mt-5 flex gap-3">
                                 <Button
-                                    onClick={() => handleDateTab('all')}
+                                    onClick={isRework ? toggleReworkFilter : () => handleDateTab('all')}
                                     variant="outline"
                                     className="border-slate-300 font-semibold text-[#0F2644]"
                                 >
-                                    View All Dates
-                                </Button>
-                                <Button
-                                    onClick={() => setShowWalkin(true)}
-                                    className="bg-[#0052CC] font-semibold text-white hover:bg-[#0047B3]"
-                                >
-                                    + Walk-in Citizen
+                                    {isRework ? 'View Full Queue' : 'View All Dates'}
                                 </Button>
                             </div>
                         </div>
@@ -452,96 +427,6 @@ export default function Queue({
                 </div>
             </div>
 
-            {/* Walk-in Citizen Modal */}
-            {showWalkin && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-                    <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                            <div>
-                                <h3 className="text-lg font-bold text-[#0F2644]">Walk-In Citizen Intake</h3>
-                                <p className="text-xs text-slate-500">Register an unscheduled citizen at this desk counter.</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowWalkin(false)}
-                                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                            >
-                                <X className="size-4.5" />
-                            </button>
-                        </div>
-
-                        {walkinError && (
-                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
-                                {walkinError}
-                            </div>
-                        )}
-
-                        <form onSubmit={submitWalkin} className="mt-4 space-y-4">
-                            <div>
-                                <Label className="text-xs font-semibold text-[#0F2644]">Citizen Full Name</Label>
-                                <Input
-                                    value={wName}
-                                    onChange={(e) => setWName(e.target.value)}
-                                    placeholder="e.g. John Kila"
-                                    className="mt-1 h-11 border-slate-300 font-medium text-sm"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Label className="text-xs font-semibold text-[#0F2644]">
-                                    Mobile Number <span className="text-slate-400">(PNG 7-digit)</span>
-                                </Label>
-                                <div className="mt-1 flex items-center gap-2">
-                                    <Input
-                                        value={wMobile}
-                                        onChange={(e) => setWMobile(e.target.value)}
-                                        placeholder="+6757123456"
-                                        className="h-11 border-slate-300 font-mono text-sm"
-                                        required
-                                    />
-                                </div>
-                                <p className="mt-1 text-[11px] text-slate-500">
-                                    Format: +675 followed by 7 digits (e.g., +6757123456).
-                                </p>
-                            </div>
-
-                            <div>
-                                <Label className="text-xs font-semibold text-[#0F2644]">Desk Counter Center</Label>
-                                <select
-                                    value={wCenter}
-                                    onChange={(e) => setWCenter(Number(e.target.value))}
-                                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-[#0F2644]"
-                                >
-                                    {centers.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="flex items-center justify-end gap-3 pt-3">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowWalkin(false)}
-                                    className="h-11 border-slate-300 font-semibold text-slate-700 hover:bg-slate-50"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    className="h-11 gap-2 rounded-xl bg-[#0052CC] px-6 font-semibold text-white shadow-xs hover:bg-[#0047B3]"
-                                >
-                                    <UserCheck className="size-4" />
-                                    <span>Check In &amp; Proceed →</span>
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </StaffLayout>
     );
 }

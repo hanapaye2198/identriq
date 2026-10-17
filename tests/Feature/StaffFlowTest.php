@@ -5,6 +5,7 @@ use App\Models\Identity;
 use App\Models\Registrant;
 use App\Models\RegistrationCenter;
 use Database\Seeders\IdentriqSeeder;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('checkin capture submit moves registrant to validating', function () {
     $this->seed(IdentriqSeeder::class);
@@ -40,7 +41,10 @@ test('rejected document routes to rework queue', function () {
     ])->assertRedirect(route('staff.queue'));
 
     expect($appointment->fresh()->status)->toBe('rework');
-    $this->get(route('staff.rework'))->assertOk();
+
+    $this->get(route('staff.queue', ['filter' => 'rework']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('staff/queue')->where('filter', 'rework'));
 });
 
 test('setup capacity is enforced at booking', function () {

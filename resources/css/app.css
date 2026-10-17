@@ -9,7 +9,7 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
@@ -59,6 +59,23 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Civic Sovereign palette — semantic tokens (canonical spec: DESIGN.md) */
+    --color-primary-hover: #0047b3;
+    --color-primary-tint: #ebf3fc;
+    --color-primary-border: #c6dcfc;
+    --color-navy: #0b192c;
+    --color-canvas: #f8fafc;
+    --color-surface: #ffffff;
+    --color-ink: #0f2644;
+    --color-line: #e2e8f0;
+    --color-success: #0e7a4a;
+    --color-success-tint: #eaf5ee;
+    --color-warn: #b45309;
+    --color-danger: #dc2626;
+    --color-gold: #c9a227;
+    --color-demo: #334155;
+    --color-demo-bg: #e2e8f0;
 }
 
 :root {
@@ -68,12 +85,12 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.488 0.243 264.376);
+    --primary: #0052cc;
     --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
+    --muted-foreground: #475569;
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
@@ -89,7 +106,7 @@
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary: #0052cc;
     --sidebar-primary-foreground: oklch(1 0 0);
     --sidebar-accent: oklch(0.97 0 0);
     --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -104,7 +121,7 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.145 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.488 0.243 264.376);
+    --primary: #0052cc;
     --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);

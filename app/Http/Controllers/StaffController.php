@@ -15,6 +15,9 @@ use Inertia\Response;
 
 class StaffController extends Controller
 {
+    /**
+     * @return array<string, int>
+     */
     private function getStats(?int $centerId = null): array
     {
         $todayStr = now()->toDateString();
@@ -89,8 +92,8 @@ class StaffController extends Controller
 
     public function walkin(Request $request): RedirectResponse
     {
-        if (!str_starts_with($request->input('mobile', ''), '+675') && preg_match('/^\d{7}$/', $request->input('mobile', ''))) {
-            $request->merge(['mobile' => '+675' . $request->input('mobile')]);
+        if (! str_starts_with($request->input('mobile', ''), '+675') && preg_match('/^\d{7}$/', $request->input('mobile', ''))) {
+            $request->merge(['mobile' => '+675'.$request->input('mobile')]);
         }
 
         $data = $request->validate([
@@ -136,6 +139,11 @@ class StaffController extends Controller
             ]);
         }
 
+        Inertia::flash('toast', [
+            'type' => 'info',
+            'message' => __('Walk-in citizen checked in — ready for biometric capture.'),
+        ]);
+
         return redirect()->route('staff.capture', $appointment);
     }
 
@@ -143,6 +151,8 @@ class StaffController extends Controller
     {
         return Inertia::render('staff/capture', [
             'appointment' => $appointment->load('registrant.demographic', 'registrant.documents', 'center'),
+            'centers' => RegistrationCenter::where('is_active', true)->get(),
+            'stats' => $this->getStats($appointment->center_id),
         ]);
     }
 
@@ -192,35 +202,24 @@ class StaffController extends Controller
             $registrant->update(['status' => 'rework']);
             $appointment->update(['status' => 'rework']);
 
-            return redirect()->route('staff.queue')->with('rework', true);
+            Inertia::flash('toast', [
+                'type' => 'warning',
+                'message' => __('Applicant flagged for rework — open the "Needs Rework" filter in Live Queue.'),
+            ]);
+
+            return redirect()->route('staff.queue');
         }
 
         $registrant->update(['status' => 'validating']);
         $appointment->update(['status' => 'completed']);
         Identity::firstOrCreate(['registrant_id' => $registrant->id], ['status' => 'pending']);
 
-        return redirect()->route('staff.queue')->with('submitted', true);
-    }
-
-    public function rework(Request $request): Response
-    {
-        $centerId = $request->query('center_id');
-        $centerId = ($centerId && $centerId !== 'all') ? (int) $centerId : null;
-
-        $query = Appointment::with('registrant.demographic', 'center')->where('status', 'rework');
-        if ($centerId) {
-            $query->where('center_id', $centerId);
-        }
-
-        return Inertia::render('staff/queue', [
-            'date' => 'all',
-            'selectedCenterId' => $centerId,
-            'centers' => RegistrationCenter::where('is_active', true)->get(),
-            'appointments' => $query->orderBy('slot_at')->get(),
-            'search' => '',
-            'filter' => 'rework',
-            'stats' => $this->getStats($centerId),
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Capture submitted — applicant forwarded to identity validation.'),
         ]);
+
+        return redirect()->route('staff.queue');
     }
 
     public function setup(): Response

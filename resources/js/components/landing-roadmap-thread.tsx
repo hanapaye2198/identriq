@@ -1,17 +1,17 @@
 import { Link } from '@inertiajs/react';
 import {
-    Activity,
     ArrowRight,
     Building2,
+    Calendar,
     Check,
     CheckCircle2,
     ChevronRight,
     Clock,
     CreditCard,
-    ExternalLink,
     FileCheck,
     FileText,
     Fingerprint,
+    HelpCircle,
     Info,
     Lock,
     MapPin,
@@ -22,642 +22,666 @@ import {
     Shield,
     ShieldCheck,
     Smartphone,
+    Sparkles,
     Star,
     Truck,
     User,
-    WifiOff,
+    Wifi,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import SmartCard3D from '@/components/landing/smart-card-3d';
+
+interface RoadmapStep {
+    id: number;
+    badge: string;
+    title: string;
+    subtitle: string;
+    timeEstimate: string;
+    description: string;
+}
+
+const ROADMAP_STEPS: RoadmapStep[] = [
+    {
+        id: 1,
+        badge: 'Step 1',
+        title: 'Online Pre-Registration',
+        subtitle: 'From any phone or browser',
+        timeEstimate: '5–10 mins',
+        description:
+            'Enter your basic citizen details, family heritage, and mobile number. You will receive an immediate SMS reference code.',
+    },
+    {
+        id: 2,
+        badge: 'Step 2',
+        title: 'Check Required Documents',
+        subtitle: 'Bring 1 supporting record',
+        timeEstimate: 'Before your visit',
+        description:
+            'Prepare your green birth certificate, church baptismal record, clinic book, or a signed letter from your local ward councillor.',
+    },
+    {
+        id: 3,
+        badge: 'Step 3',
+        title: 'Choose a Registry Center',
+        subtitle: 'All 22 provinces connected',
+        timeEstimate: 'Instant booking',
+        description:
+            'Select your nearest provincial office or mobile enrollment patrol. Choose a morning or afternoon arrival window to skip the regular queue.',
+    },
+    {
+        id: 4,
+        badge: 'Step 4',
+        title: 'Express Biometric Visit',
+        subtitle: 'Photo & fingerprint scan',
+        timeEstimate: '5 mins at counter',
+        description:
+            'Walk into the express pre-registration desk. An enrollment officer captures your digital photo and fingerprints with zero paper delays.',
+    },
+    {
+        id: 5,
+        badge: 'Step 5',
+        title: 'Receive & Use Your ID',
+        subtitle: 'Physical card & digital NFC',
+        timeEstimate: 'Lifelong credential',
+        description:
+            'Collect your secure polycarbonate Smart Card. Instantly verify your identity for BSP/Kina Bank accounts, Nasfund, and SIM cards.',
+    },
+];
 
 export default function LandingRoadmapThread() {
-    const sectionRef = useRef<HTMLElement | null>(null);
-    const [scrollProgress, setScrollProgress] = useState(0);
+    const [activeStep, setActiveStep] = useState<number>(1);
+    const [selectedDoc, setSelectedDoc] = useState<number>(0);
+    const [selectedCenter, setSelectedCenter] = useState<number>(0);
 
-    // Track scroll position through the roadmap section
-    useEffect(() => {
-        let ticking = false;
-        const handleScroll = () => {
-            if (!sectionRef.current) return;
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const rect = sectionRef.current!.getBoundingClientRect();
-                    const windowHeight = window.innerHeight;
-                    const totalDistance = rect.height - windowHeight * 0.6;
-                    if (totalDistance > 0) {
-                        const current = -rect.top + windowHeight * 0.3;
-                        const p = Math.max(0, Math.min(1, current / totalDistance));
-                        setScrollProgress(p);
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
+    const DOCUMENTS = [
+        {
+            title: 'National Birth Certificate',
+            category: 'Civil Registry',
+            badge: 'Fastest Check',
+            description:
+                'Green NIDA or Provincial Civil Registry birth certificate with official stamp and registry folio number.',
+            validFor: 'Citizens born anywhere in Papua New Guinea',
+        },
+        {
+            title: 'Church Baptismal Certificate',
+            category: 'Ecclesiastical Record',
+            badge: 'Widely Accepted',
+            description:
+                'Original baptism or dedication certificate from recognized churches (Catholic, Lutheran, United, SDA, Anglican, Baptist, etc.).',
+            validFor: 'Adults without an immediate civil certificate',
+        },
+        {
+            title: 'Ward Councillor Verification Letter',
+            category: 'Local Level Government',
+            badge: 'Community Verified',
+            description:
+                'Official letter stamped and signed by your Ward Councillor or Village Peace Officer confirming your clan and residency.',
+            validFor: 'Rural and remote communities throughout all 89 districts',
+        },
+        {
+            title: 'Provincial Hospital / Clinic Book',
+            category: 'Health Record',
+            badge: 'Standard Record',
+            description:
+                'Child health or maternal health record book showing date and place of birth with maternal details.',
+            validFor: 'Applicants providing infant and maternal hospital records',
+        },
+    ];
 
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll();
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    // Interactive simulator states
-    const [biometricScanned, setBiometricScanned] = useState(false);
-    const [abisScanning, setAbisScanning] = useState(false);
-    const [cardTilted, setCardTilted] = useState(false);
-
-    const triggerBiometricScan = () => {
-        setBiometricScanned(false);
-        setTimeout(() => setBiometricScanned(true), 900);
-    };
-
-    const triggerAbisMatch = () => {
-        setAbisScanning(true);
-        setTimeout(() => setAbisScanning(false), 1200);
-    };
+    const PROVINCIAL_CENTERS = [
+        {
+            name: 'Waigani Statistics Haus Center',
+            location: 'National Capital District · Port Moresby',
+            hours: 'Mon–Fri 8:00 AM – 4:00 PM',
+            slots: 'Express Kiosk Available · 4 Active Desks',
+            status: 'Open Today',
+        },
+        {
+            name: 'Lae Top Town Civic Center',
+            location: 'Morobe Province · Lae City',
+            hours: 'Mon–Fri 8:00 AM – 4:00 PM',
+            slots: 'Walk-ins & Online Bookings · 3 Active Desks',
+            status: 'Open Today',
+        },
+        {
+            name: 'Mt Hagen Provincial Administration',
+            location: 'Western Highlands Province · Mt Hagen',
+            hours: 'Mon–Fri 8:30 AM – 3:30 PM',
+            slots: 'Highlands Highway Hub · 2 Active Desks',
+            status: 'Open Today',
+        },
+        {
+            name: 'Kokopo Civic Commercial Complex',
+            location: 'East New Britain · Kokopo',
+            hours: 'Mon–Fri 8:00 AM – 4:00 PM',
+            slots: 'Islands Regional Hub · 2 Active Desks',
+            status: 'Open Today',
+        },
+    ];
 
     return (
-        <section
-            id="roadmap"
-            ref={sectionRef}
-            aria-label="Official Registration Process"
-            className="relative bg-[#071324] py-20 text-white sm:py-28 border-t border-slate-800"
-        >
-            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                {/* Section Header */}
-                <div className="mx-auto max-w-3xl text-center">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3.5 py-1 text-xs font-semibold tracking-wider text-sky-300 uppercase">
-                        <Building2 className="size-3.5 text-sky-400" aria-hidden="true" />
-                        <span>PNG Civil &amp; National Registration Authority</span>
+        <section id="roadmap" className="w-full text-ink scroll-mt-20">
+            {/* Section Header */}
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-line pb-8">
+                <div className="max-w-2xl">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary-tint px-3 py-1 text-xs font-semibold text-primary">
+                        <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                        <span>Simple Citizen Guide</span>
                     </div>
-
-                    <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">
-                        Five Steps to Your National Identity Card
+                    <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl text-ink">
+                        How to Pre-Register Step by Step
                     </h2>
-
-                    <p className="mt-4 text-base leading-relaxed text-slate-300">
-                        Governed by the <em>Civil and National Registration Act</em>. 
-                        Pre-register online from your phone or computer, complete biometric enrollment at an accredited provincial center, and receive your legal identity credentials.
+                    <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+                        Pre-registering saves you from waiting in long registry lines. Follow these 5 steps to complete your registration and receive your official National ID.
                     </p>
-
-                    {/* Process Information Badges */}
-                    <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-[#0B192C] px-4 py-2 text-xs font-medium text-slate-200">
-                            <Clock className="size-4 text-sky-400" aria-hidden="true" />
-                            <span>Online Form: <strong>10 Minutes</strong></span>
-                        </div>
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-[#0B192C] px-4 py-2 text-xs font-medium text-slate-200">
-                            <MapPin className="size-4 text-emerald-400" aria-hidden="true" />
-                            <span>In-Person Enrollment: <strong>One 15-Minute Visit</strong></span>
-                        </div>
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-[#0B192C] px-4 py-2 text-xs font-medium text-slate-200">
-                            <ShieldCheck className="size-4 text-[#C9A227]" aria-hidden="true" />
-                            <span>Standard: <strong>ICAO 9303 &amp; ISO 18013-5 mDL</strong></span>
-                        </div>
-                    </div>
                 </div>
 
-                {/* THE CONTINUOUS ROADMAP THREAD */}
-                <div className="relative mt-20">
-                    {/* Continuous Vertical Thread Line (Left on mobile, Centered on desktop) */}
-                    <div 
-                        className="absolute top-8 bottom-8 left-6 w-1 -translate-x-1/2 bg-slate-800 lg:left-1/2" 
-                        aria-hidden="true"
+                <div className="flex items-center gap-2">
+                    <Link
+                        href="/prereg"
+                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-primary-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
-                        {/* Dynamic Scroll Fill Indicator */}
-                        <div
-                            className="w-full bg-gradient-to-b from-[#0052CC] via-[#388BFF] to-[#C9A227] transition-all duration-300"
-                            style={{ height: `${scrollProgress * 100}%` }}
-                        />
-                    </div>
+                        <span>Start Online Pre-Reg</span>
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                </div>
+            </div>
 
-                    {/* =========================================================================
-                        MILESTONE 1: Online Pre-Registration & Document Upload
-                       ========================================================================= */}
-                    <div className="relative mb-24 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
-                        {/* Milestone Node Badge */}
-                        <div className="absolute left-6 -translate-x-1/2 flex items-center justify-center lg:left-1/2 z-20" aria-hidden="true">
-                            <div className="flex size-12 items-center justify-center rounded-2xl border-2 border-[#0052CC] bg-[#071324] text-sm font-black text-white shadow-md">
-                                01
-                            </div>
-                        </div>
+            {/* Step Selection Tabs (Responsive Stepper) */}
+            <div className="mt-8">
+                <div
+                    role="tablist"
+                    aria-label="Pre-registration steps"
+                    className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+                >
+                    {ROADMAP_STEPS.map((step) => {
+                        const isCurrent = activeStep === step.id;
+                        return (
+                            <button
+                                key={step.id}
+                                role="tab"
+                                aria-selected={isCurrent}
+                                aria-controls={`roadmap-panel-${step.id}`}
+                                onClick={() => setActiveStep(step.id)}
+                                className={`group relative flex min-h-[52px] flex-col justify-between rounded-xl border p-4 text-left transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                                    isCurrent
+                                        ? 'border-primary bg-primary text-white shadow-md'
+                                        : 'border-line bg-surface hover:border-primary-border hover:bg-canvas text-ink'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between w-full">
+                                    <span
+                                        className={`inline-flex h-6 items-center justify-center rounded-md px-2 text-xs font-bold ${
+                                            isCurrent
+                                                ? 'bg-white text-primary'
+                                                : 'bg-primary-tint text-primary'
+                                        }`}
+                                    >
+                                        {step.badge}
+                                    </span>
+                                    <span
+                                        className={`text-[11px] font-medium ${
+                                            isCurrent ? 'text-white/80' : 'text-muted-foreground'
+                                        }`}
+                                    >
+                                        {step.timeEstimate}
+                                    </span>
+                                </div>
 
-                        {/* Instructions Content (Left Side on Desktop) */}
-                        <div className="pl-16 lg:pl-0 lg:pr-14 lg:text-right">
-                            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#0052CC]/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-sky-400 border border-[#0052CC]/30">
-                                Step 1 · Online Self-Service
+                                <div className="mt-3">
+                                    <div
+                                        className={`text-sm font-bold leading-tight ${
+                                            isCurrent ? 'text-white' : 'text-ink'
+                                        }`}
+                                    >
+                                        {step.title}
+                                    </div>
+                                    <div
+                                        className={`mt-1 text-xs truncate ${
+                                            isCurrent ? 'text-white/80' : 'text-muted-foreground'
+                                        }`}
+                                    >
+                                        {step.subtitle}
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Dynamic Interactive Stage Viewer */}
+            <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:p-10 shadow-sm">
+                {/* STAGE 1: ONLINE PRE-REGISTRATION INTAKE */}
+                {activeStep === 1 && (
+                    <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center gap-2 rounded-lg bg-primary-tint px-3 py-1 text-xs font-semibold text-primary">
+                                <Smartphone className="h-4 w-4" />
+                                <span>Takes only 5 to 10 minutes</span>
                             </div>
-                            <h3 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                                Online Pre-Registration
+
+                            <h3 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                                1. Fill In Your Citizen Information Online
                             </h3>
-                            <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                                Complete your personal, civil, and residency information from any smartphone, tablet, or desktop computer. 
-                                Verify your phone number via SMS code and upload digital photographs of your supporting documents.
+
+                            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                                You don’t need to stand in line at the provincial office just to fill out paper forms. Complete your pre-registration from home, your workplace, or a community center on any smartphone or computer.
                             </p>
 
-                            <ul className="mt-4 space-y-2 text-xs text-slate-300 lg:flex lg:flex-col lg:items-end">
-                                <li className="flex items-center gap-2">
-                                    <span>Verify your phone number with an instant 6-digit SMS code (+675)</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <span>Upload birth certificates, baptism certificates, or ward councillor letters</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <span>No printed application forms or certified photocopies required</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                            </ul>
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas p-3.5">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                                    <div className="text-sm">
+                                        <strong className="font-semibold text-ink">Personal &amp; Clan Details:</strong>
+                                        <span className="text-muted-foreground ml-1">
+                                            Enter your full legal name, date of birth, sex, village, and Local Level Government (LLG).
+                                        </span>
+                                    </div>
+                                </div>
 
-                            <div className="mt-6 flex flex-wrap items-center gap-3 lg:justify-end">
+                                <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas p-3.5">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                                    <div className="text-sm">
+                                        <strong className="font-semibold text-ink">Instant SMS Booking Code:</strong>
+                                        <span className="text-muted-foreground ml-1">
+                                            Receive your 8-digit reference code (<code className="font-mono text-primary font-bold">PNG-PR-XXXXXX</code>) directly to your Digicel or Vodafone phone.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas p-3.5">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                                    <div className="text-sm">
+                                        <strong className="font-semibold text-ink">Save &amp; Resume Anytime:</strong>
+                                        <span className="text-muted-foreground ml-1">
+                                            If you need to check details with your family, your draft stays saved for 30 days.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex flex-wrap items-center gap-4">
                                 <Link
                                     href="/prereg"
-                                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#0052CC] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white shadow transition hover:bg-primary-hover active:scale-[0.98]"
                                 >
-                                    <span>Begin Pre-Registration</span>
-                                    <ArrowRight className="size-4" aria-hidden="true" />
+                                    <span>Begin Step 1: Pre-Register Now</span>
+                                    <ArrowRight className="h-4 w-4" />
                                 </Link>
+                                <span className="text-xs text-muted-foreground font-medium">
+                                    Free official enrollment · No fees
+                                </span>
                             </div>
                         </div>
 
-                        {/* Visual Interface Card (Right Side on Desktop) */}
-                        <div className="pl-16 lg:pl-14">
-                            <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0B192C] p-6 shadow-lg">
-                                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                        {/* Interactive Mobile Form Simulator */}
+                        <div className="rounded-2xl border border-line bg-canvas p-5 sm:p-6 shadow-inner">
+                            <div className="mx-auto max-w-sm rounded-2xl border-2 border-line bg-surface p-4 shadow-md">
+                                <div className="flex items-center justify-between border-b border-line pb-3">
                                     <div className="flex items-center gap-2">
-                                        <div className="flex size-7 items-center justify-center rounded-lg bg-[#0052CC] text-white">
-                                            <Phone className="size-3.5" aria-hidden="true" />
-                                        </div>
-                                        <span className="text-xs font-bold text-white">Mobile Phone Verification</span>
+                                        <img src="/images/identriq-mark.png" alt="" className="h-5 w-5 object-contain" />
+                                        <span className="text-xs font-bold text-ink">PORTAL PRE-REGISTRATION</span>
                                     </div>
-                                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 border border-emerald-500/30">
-                                        +675 Verified
+                                    <span className="rounded bg-emerald-50 text-emerald-700 font-mono text-[10px] font-bold px-1.5 py-0.5 border border-emerald-200">
+                                        ONLINE
                                     </span>
                                 </div>
 
-                                <div className="mt-5 space-y-4">
-                                    <div className="rounded-xl bg-[#071324] p-3.5 border border-slate-800">
-                                        <div className="text-[11px] text-slate-400">Mobile Contact</div>
-                                        <div className="font-mono text-sm font-semibold text-white mt-0.5">+675 7123 4567 (Digicel / Bmobile)</div>
+                                <div className="mt-4 space-y-3 text-xs">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                                            Given Name(s)
+                                        </label>
+                                        <div className="mt-1 rounded-lg border border-primary-border bg-primary-tint/30 px-3 py-2 font-semibold text-ink">
+                                            Kila Peter
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <div className="flex items-center justify-between text-xs text-slate-300">
-                                            <span>One-Time Passcode (OTP)</span>
-                                            <span className="text-sky-400 font-mono text-[11px]">DEMO: 714902</span>
-                                        </div>
-                                        <div className="mt-2 grid grid-cols-6 gap-2">
-                                            {['7', '1', '4', '9', '0', '2'].map((digit, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="flex h-11 items-center justify-center rounded-lg border border-slate-700 bg-[#071324] font-mono text-base font-bold text-white"
-                                                >
-                                                    {digit}
-                                                </div>
-                                            ))}
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                                            Family / Clan Surname
+                                        </label>
+                                        <div className="mt-1 rounded-lg border border-primary-border bg-primary-tint/30 px-3 py-2 font-semibold text-ink">
+                                            Amini
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 rounded-lg bg-emerald-950/40 p-2.5 border border-emerald-800/40 text-[11px] text-emerald-200">
-                                        <FileCheck className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                        <span>Document Attached: <strong>Certificate of Birth (Civil Registry)</strong></span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                                                Date of Birth
+                                            </label>
+                                            <div className="mt-1 rounded-lg border border-line bg-canvas px-3 py-2 font-mono text-ink">
+                                                14/04/1994
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                                                Province
+                                            </label>
+                                            <div className="mt-1 rounded-lg border border-line bg-canvas px-3 py-2 text-ink truncate">
+                                                Central Province
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                                            Mobile Contact (for SMS reference)
+                                        </label>
+                                        <div className="mt-1 rounded-lg border border-line bg-canvas px-3 py-2 font-mono text-ink">
+                                            +675 7123 4567
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-lg bg-emerald-50 p-2.5 text-[11px] text-emerald-800 border border-emerald-200 flex items-center gap-2">
+                                        <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                                        <span>Instant SMS verification sent to applicant</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {/* =========================================================================
-                        MILESTONE 2: In-Person Biometric Enrollment
-                       ========================================================================= */}
-                    <div className="relative mb-24 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
-                        {/* Milestone Node Badge */}
-                        <div className="absolute left-6 -translate-x-1/2 flex items-center justify-center lg:left-1/2 z-20" aria-hidden="true">
-                            <div className="flex size-12 items-center justify-center rounded-2xl border-2 border-[#0052CC] bg-[#071324] text-sm font-black text-white shadow-md">
-                                02
+                {/* STAGE 2: PREPARE SUPPORTING DOCUMENTS */}
+                {activeStep === 2 && (
+                    <div className="space-y-6">
+                        <div className="max-w-3xl">
+                            <div className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
+                                <FileCheck className="h-4 w-4" />
+                                <span>Bring any 1 recognized document</span>
                             </div>
-                        </div>
-
-                        {/* Visual Interface Card (Left Side on Desktop) */}
-                        <div className="order-2 pl-16 lg:order-1 lg:pl-0 lg:pr-14">
-                            <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0B192C] p-6 shadow-lg">
-                                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex size-7 items-center justify-center rounded-lg bg-[#0052CC] text-white">
-                                            <Fingerprint className="size-4" aria-hidden="true" />
-                                        </div>
-                                        <span className="text-xs font-bold text-white">Biometric Enrollment Desk</span>
-                                    </div>
-                                    <span className="text-[11px] font-mono text-slate-400">
-                                        Waigani Counter #02
-                                    </span>
-                                </div>
-
-                                <div className="mt-4 grid grid-cols-2 gap-3">
-                                    {/* Facial Photo */}
-                                    <div className="flex flex-col items-center justify-center rounded-xl border border-slate-800 bg-[#071324] p-4 text-center">
-                                        <div className="relative size-16 rounded-full border-2 border-slate-700 flex items-center justify-center bg-[#0B192C] overflow-hidden">
-                                            <User className="size-8 text-slate-400" aria-hidden="true" />
-                                        </div>
-                                        <span className="mt-2 text-xs font-bold text-white">ICAO 9303 Portrait</span>
-                                        <span className="text-[10px] text-emerald-400 font-semibold">Standard Passed</span>
-                                    </div>
-
-                                    {/* 10-Print Fingerprint Simulation */}
-                                    <button
-                                        type="button"
-                                        onClick={triggerBiometricScan}
-                                        className="flex flex-col items-center justify-center rounded-xl border border-slate-800 bg-[#071324] p-4 text-center cursor-pointer transition hover:border-[#0052CC] hover:bg-slate-900 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#388BFF]"
-                                    >
-                                        <div className="relative size-16 rounded-2xl border border-[#0052CC]/50 bg-[#0052CC]/10 flex items-center justify-center">
-                                            <Fingerprint className={`size-9 transition-colors ${biometricScanned ? 'text-emerald-400' : 'text-sky-400'}`} aria-hidden="true" />
-                                        </div>
-                                        <span className="mt-2 text-xs font-bold text-white">10-Finger Scanner</span>
-                                        <span className={`text-[10px] font-bold ${biometricScanned ? 'text-emerald-400' : 'text-sky-300'}`}>
-                                            {biometricScanned ? '✓ 10 Prints Saved' : 'Click to Test Scan'}
-                                        </span>
-                                    </button>
-                                </div>
-
-                                <div className="mt-4 flex items-center justify-between rounded-xl bg-[#071324] p-3 border border-slate-800 text-xs">
-                                    <div className="flex items-center gap-2">
-                                        <QrCode className="size-4 text-sky-400" aria-hidden="true" />
-                                        <span className="font-mono text-slate-300">Appointment QR: POM-2026-9041</span>
-                                    </div>
-                                    <span className="text-emerald-400 font-semibold text-[11px]">Checked In</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Instructions Content (Right Side on Desktop) */}
-                        <div className="order-1 pl-16 lg:order-2 lg:pl-14">
-                            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#0052CC]/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-sky-400 border border-[#0052CC]/30">
-                                Step 2 · Provincial Office Visit
-                            </div>
-                            <h3 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                                Biometric Enrollment
+                            <h3 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                                2. What Documents to Bring to Your Visit
                             </h3>
-                            <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                                Visit your chosen provincial registry office or mobile enrollment kit with your original documents. 
-                                A trained registry officer records your digital facial portrait, ten fingerprints, and iris scans in a single 15-minute appointment.
+                            <p className="mt-2 text-sm text-muted-foreground sm:text-base leading-relaxed">
+                                You do not need expensive lawyer declarations or photocopy certification. Select any of the recognized civil or community documents below to see what is accepted.
                             </p>
+                        </div>
 
-                            <ul className="mt-4 space-y-2 text-xs text-slate-300">
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                    <span>Accredited centers operating across all 22 provinces</span>
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                    <span>High-resolution portrait and 10-finger slap capture compliant with ICAO 9303</span>
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                    <span>Original document inspection against civil registry archives</span>
-                                </li>
-                            </ul>
-
-                            <div className="mt-6 flex flex-wrap items-center gap-3">
-                                <Link
-                                    href="/centers"
-                                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        {/* Interactive Document Cards */}
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {DOCUMENTS.map((doc, idx) => (
+                                <div
+                                    key={doc.title}
+                                    onClick={() => setSelectedDoc(idx)}
+                                    className={`rounded-xl border p-4 transition cursor-pointer flex flex-col justify-between ${
+                                        selectedDoc === idx
+                                            ? 'border-primary bg-primary-tint/40 shadow-sm ring-1 ring-primary'
+                                            : 'border-line bg-canvas hover:border-primary-border'
+                                    }`}
                                 >
-                                    <MapPin className="size-4 text-sky-400" aria-hidden="true" />
-                                    <span>Find Your Provincial Registry Office</span>
-                                </Link>
+                                    <div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                {doc.category}
+                                            </span>
+                                            <span className="rounded bg-primary-tint text-primary text-[10px] font-bold px-1.5 py-0.5 border border-primary-border">
+                                                {doc.badge}
+                                            </span>
+                                        </div>
+                                        <div className="mt-2 text-sm font-bold text-ink">{doc.title}</div>
+                                        <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                                            {doc.description}
+                                        </p>
+                                    </div>
+                                    <div className="mt-3 border-t border-line pt-2 text-[11px] font-medium text-primary">
+                                        Valid for: {doc.validFor}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Helpful Guidance Notice */}
+                        <div className="rounded-xl border border-primary-border bg-primary-tint/30 p-4 text-xs text-ink flex items-start gap-3">
+                            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                            <div className="leading-relaxed">
+                                <strong className="font-semibold text-primary">What if you don't have a birth certificate?</strong>
+                                <span className="ml-1 text-muted-foreground">
+                                    No problem! Under the <em>Civil and National Registration Act</em>, a signed confirmation letter from your local ward councillor or church pastor is fully legally recognized for your initial identity verification.
+                                </span>
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {/* =========================================================================
-                        MILESTONE 3: Civil Registry Verification & ABIS Deduplication
-                       ========================================================================= */}
-                    <div className="relative mb-24 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
-                        {/* Milestone Node Badge */}
-                        <div className="absolute left-6 -translate-x-1/2 flex items-center justify-center lg:left-1/2 z-20" aria-hidden="true">
-                            <div className="flex size-12 items-center justify-center rounded-2xl border-2 border-[#0052CC] bg-[#071324] text-sm font-black text-white shadow-md">
-                                03
-                            </div>
-                        </div>
-
-                        {/* Instructions Content (Left Side on Desktop) */}
-                        <div className="pl-16 lg:pl-0 lg:pr-14 lg:text-right">
-                            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#0052CC]/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-sky-400 border border-[#0052CC]/30">
-                                Step 3 · Civil Registry Clearance
-                            </div>
-                            <h3 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                                ABIS Deduplication &amp; Civil Verification
-                            </h3>
-                            <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                                Your enrollment records undergo automated 1:N deduplication against the national civil database. 
-                                This ensures no individual can obtain duplicate credentials, protecting citizen identities and public voting rolls.
-                            </p>
-
-                            <ul className="mt-4 space-y-2 text-xs text-slate-300 lg:flex lg:flex-col lg:items-end">
-                                <li className="flex items-center gap-2">
-                                    <span>Automated cross-check across fingerprint and facial biometric records</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <span>Validation with National Civil Registry &amp; Vital Statistics birth ledgers</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <span>Adjudication officers review exceptions and provincial name spellings</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                            </ul>
-
-                            <div className="mt-6 flex flex-wrap items-center gap-3 lg:justify-end">
-                                <Link
-                                    href="/admin/validation"
-                                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                >
-                                    <Shield className="size-4 text-sky-400" aria-hidden="true" />
-                                    <span>Registry Officer Verification Console</span>
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Visual Interface Card (Right Side on Desktop) */}
-                        <div className="pl-16 lg:pl-14">
-                            <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0B192C] p-6 shadow-lg">
-                                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex size-7 items-center justify-center rounded-lg bg-[#0052CC] text-white">
-                                            <Activity className="size-4" aria-hidden="true" />
-                                        </div>
-                                        <span className="text-xs font-bold text-white">Civil Registry ABIS Engine</span>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={triggerAbisMatch}
-                                        className="inline-flex min-h-[32px] items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 cursor-pointer focus-visible:outline-none focus-visible:underline"
-                                    >
-                                        <RefreshCw className={`size-3 ${abisScanning ? 'animate-spin' : ''}`} aria-hidden="true" />
-                                        <span>{abisScanning ? 'Checking Registry...' : 'Simulate Match'}</span>
-                                    </button>
+                {/* STAGE 3: SELECT REGISTRY CENTER & TIME */}
+                {activeStep === 3 && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <div className="inline-flex items-center gap-2 rounded-lg bg-sky-50 px-3 py-1 text-xs font-semibold text-primary border border-primary-border">
+                                    <MapPin className="h-4 w-4" />
+                                    <span>22 Provincial Offices &amp; Mobile Teams</span>
                                 </div>
-
-                                <div className="mt-4 space-y-3">
-                                    <div className="rounded-xl border border-slate-800 bg-[#071324] p-3.5">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-300">Biometric Uniqueness Score</span>
-                                            <span className="font-mono font-bold text-emerald-400">99.8% UNIQUE</span>
-                                        </div>
-                                        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                                            <div
-                                                className={`h-full bg-gradient-to-r from-[#0052CC] to-emerald-400 transition-all duration-700 ${
-                                                    abisScanning ? 'w-1/3 animate-pulse' : 'w-full'
-                                                }`}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div className="rounded-lg bg-[#071324] p-2.5 border border-slate-800">
-                                            <div className="text-[10px] text-slate-400">Civil Registry Record</div>
-                                            <div className="font-semibold text-white mt-0.5">VERIFIED ACTIVE</div>
-                                        </div>
-                                        <div className="rounded-lg bg-[#071324] p-2.5 border border-slate-800">
-                                            <div className="text-[10px] text-slate-400">Conflict Flags</div>
-                                            <div className="font-semibold text-emerald-400 mt-0.5">0 Duplicates Found</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-lg bg-emerald-950/40 p-2.5 border border-emerald-800/40 text-xs text-emerald-200 flex items-center gap-2">
-                                        <Check className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                        <span>Candidate record cleared for national smart card personalization</span>
-                                    </div>
-                                </div>
+                                <h3 className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                                    3. Select Your Provincial Center
+                                </h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Choose an office close to you to reserve your biometric appointment window.
+                                </p>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* =========================================================================
-                        MILESTONE 4: Smart Card Personalization & Laser Engraving
-                       ========================================================================= */}
-                    <div className="relative mb-24 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
-                        {/* Milestone Node Badge */}
-                        <div className="absolute left-6 -translate-x-1/2 flex items-center justify-center lg:left-1/2 z-20" aria-hidden="true">
-                            <div className="flex size-12 items-center justify-center rounded-2xl border-2 border-[#0052CC] bg-[#071324] text-sm font-black text-white shadow-md">
-                                04
-                            </div>
-                        </div>
-
-                        {/* Visual Interface Card (Left Side on Desktop) */}
-                        <div className="order-2 pl-16 lg:order-1 lg:pl-0 lg:pr-14">
-                            <div
-                                onClick={() => setCardTilted(!cardTilted)}
-                                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-[#0B192C] via-[#0F2644] to-[#071324] p-6 text-white shadow-xl transition-all duration-300 hover:border-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#388BFF]"
-                                role="button"
-                                tabIndex={0}
-                                aria-label="Interactive National ID Smart Card Preview. Click to toggle card view."
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setCardTilted(!cardTilted);
-                                    }
-                                }}
+                            <Link
+                                href="/centers"
+                                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-primary bg-surface px-5 py-2 text-xs font-bold text-primary hover:bg-primary-tint self-start sm:self-auto"
                             >
-                                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex size-5 items-center justify-center rounded-full bg-[#C9A227] text-black">
-                                            <Star className="size-3 fill-black text-black" aria-hidden="true" />
+                                <Building2 className="h-4 w-4" />
+                                <span>Browse All Centers Directory</span>
+                            </Link>
+                        </div>
+
+                        {/* Provincial Centers Showcase */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {PROVINCIAL_CENTERS.map((center, idx) => (
+                                <div
+                                    key={center.name}
+                                    onClick={() => setSelectedCenter(idx)}
+                                    className={`rounded-xl border p-5 transition cursor-pointer ${
+                                        selectedCenter === idx
+                                            ? 'border-primary bg-primary-tint/30 ring-1 ring-primary shadow-sm'
+                                            : 'border-line bg-canvas hover:border-primary-border'
+                                    }`}
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div>
+                                            <div className="text-sm font-bold text-ink">{center.name}</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                                <MapPin className="h-3.5 w-3.5 text-primary" />
+                                                <span>{center.location}</span>
+                                            </div>
                                         </div>
-                                        <span className="font-bold tracking-wider text-xs uppercase text-white">
-                                            Independent State of Papua New Guinea
+                                        <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 border border-emerald-300">
+                                            {center.status}
                                         </span>
                                     </div>
-                                    <span className="font-mono text-[10px] text-slate-300">ICAO 9303</span>
-                                </div>
 
-                                <div className="mt-5 flex items-center gap-4">
-                                    <div className="flex size-14 items-center justify-center rounded-xl bg-slate-900 border border-slate-700 text-slate-300 shadow-inner">
-                                        <User className="size-8" aria-hidden="true" />
-                                    </div>
-
-                                    <div>
-                                        <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                                            National Citizen Identity Card
+                                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-line pt-3">
+                                        <div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold">Hours</span>
+                                            <div className="font-semibold text-ink text-[11px] mt-0.5">{center.hours}</div>
                                         </div>
-                                        <div className="text-base font-bold text-white tracking-wide">
-                                            KILA M. AMINI
-                                        </div>
-                                        <div className="mt-0.5 font-mono text-sm font-bold text-[#C9A227] tracking-wider">
-                                            PNG-2026-004128
+                                        <div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold">Desk Capacity</span>
+                                            <div className="font-semibold text-primary text-[11px] mt-0.5">{center.slots}</div>
                                         </div>
                                     </div>
                                 </div>
+                            ))}
+                        </div>
 
-                                <div className="mt-5 flex items-center justify-between border-t border-slate-800 pt-3 text-[11px] text-slate-300">
-                                    <div className="flex items-center gap-1.5">
-                                        <Lock className="size-3.5 text-emerald-400" aria-hidden="true" />
-                                        <span>Polycarbonate Laser Engraved</span>
+                        <div className="flex items-center justify-between border-t border-line pt-4 text-xs text-muted-foreground">
+                            <span>Prefer walk-in? Pre-registered citizens get express fast-track priority at all centers.</span>
+                            <Link href="/centers" className="font-semibold text-primary hover:underline">
+                                View map &amp; directions →
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* STAGE 4: IN-PERSON BIOMETRIC CAPTURE */}
+                {activeStep === 4 && (
+                    <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-center">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
+                                <Fingerprint className="h-4 w-4 text-emerald-600" />
+                                <span>Quick 5-Minute In-Person Step</span>
+                            </div>
+
+                            <h3 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                                4. Express Biometric Visit &amp; Verification
+                            </h3>
+
+                            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                                When you arrive at the provincial office, bypass the regular general queue and head straight to the <strong>Pre-Registration Fast-Track Desk</strong>.
+                            </p>
+
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                                        1
                                     </div>
-                                    <span className="font-mono text-sky-400">Contactless Chip Active</span>
+                                    <div className="text-sm">
+                                        <div className="font-bold text-ink">Show Your SMS Reference Code</div>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            The officer pulls up your pre-filled record instantly on their terminal. No re-typing or manual paperwork.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                                        2
+                                    </div>
+                                    <div className="text-sm">
+                                        <div className="font-bold text-ink">Digital High-Resolution Photo</div>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            A standard compliant portrait photograph is taken against the official neutral background.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                                        3
+                                    </div>
+                                    <div className="text-sm">
+                                        <div className="font-bold text-ink">4-Finger Optical Biometric Capture</div>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            Gentle optical scan of your index and thumb fingers. We check your details so no one else can use your identity.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Instructions Content (Right Side on Desktop) */}
-                        <div className="order-1 pl-16 lg:order-2 lg:pl-14">
-                            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#0052CC]/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-sky-400 border border-[#0052CC]/30">
-                                Step 4 · High-Security Production
+                        {/* Visual Capture Station Guide */}
+                        <div className="rounded-2xl border border-line bg-canvas p-6 text-center space-y-4 shadow-sm">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-md">
+                                <Scan className="h-8 w-8" />
                             </div>
-                            <h3 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                                Smart Card Personalization
-                            </h3>
-                            <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                                After verification approval, your lifetime National ID number (<span className="font-mono text-[#C9A227]">PNG-2026-XXXXXX</span>) is issued. 
-                                Your card is manufactured on multi-layer composite polycarbonate with laser-engraved personal data and an embedded ICAO 9303 chip.
-                            </p>
-
-                            <ul className="mt-4 space-y-2 text-xs text-slate-300">
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                    <span>Laser engraving etched directly into the plastic layers prevents alteration</span>
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                    <span>Contactless electronic chip stores cryptographically signed biometric templates</span>
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                    <span>Compliant with Bank of PNG and International Civil Aviation standards</span>
-                                </li>
-                            </ul>
-
-                            <div className="mt-6 flex flex-wrap items-center gap-3">
-                                <Link
-                                    href="/admin/issuance"
-                                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                >
-                                    <CreditCard className="size-4 text-sky-400" aria-hidden="true" />
-                                    <span>Card Issuance Production Desk</span>
-                                </Link>
+                            <div>
+                                <div className="text-base font-bold text-ink">Fast-Track Enrollment Desk</div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Average in-person processing time: <strong>4 minutes 30 seconds</strong>.
+                                </p>
+                            </div>
+                            <div className="rounded-xl border border-line bg-surface p-4 text-xs text-left space-y-2">
+                                <div className="flex items-center justify-between text-muted-foreground">
+                                    <span>Pre-reg lookup:</span>
+                                    <strong className="text-emerald-700">Instant (SMS)</strong>
+                                </div>
+                                <div className="flex items-center justify-between text-muted-foreground">
+                                    <span>Photo capture:</span>
+                                    <strong className="text-ink">~60 secs</strong>
+                                </div>
+                                <div className="flex items-center justify-between text-muted-foreground">
+                                    <span>Fingerprint scan:</span>
+                                    <strong className="text-ink">~90 secs</strong>
+                                </div>
+                                <div className="flex items-center justify-between text-muted-foreground border-t border-line pt-2">
+                                    <span>Total visit:</span>
+                                    <strong className="text-primary font-bold">&lt; 5 minutes</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {/* =========================================================================
-                        MILESTONE 5: Distribution & Offline Verification
-                       ========================================================================= */}
-                    <div className="relative grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
-                        {/* Milestone Node Badge */}
-                        <div className="absolute left-6 -translate-x-1/2 flex items-center justify-center lg:left-1/2 z-20" aria-hidden="true">
-                            <div className="flex size-12 items-center justify-center rounded-2xl border-2 border-[#C9A227] bg-[#071324] text-sm font-black text-[#C9A227] shadow-md">
-                                05
+                {/* STAGE 5: RECEIVE AND USE YOUR ID (WITH 3D CARD SHOWCASE) */}
+                {activeStep === 5 && (
+                    <div className="grid gap-8 lg:grid-cols-[1fr_450px] lg:items-center">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center gap-2 rounded-lg bg-primary-tint px-3 py-1 text-xs font-semibold text-primary">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                                <span>Interactive 3D Smart Card Model</span>
                             </div>
-                        </div>
 
-                        {/* Instructions Content (Left Side on Desktop) */}
-                        <div className="pl-16 lg:pl-0 lg:pr-14 lg:text-right">
-                            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#C9A227]/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-[#C9A227] border border-[#C9A227]/30">
-                                Step 5 · Collection &amp; Daily Use
-                            </div>
-                            <h3 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                                Collection &amp; Offline Verification
+                            <h3 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                                5. Receive Your Physical &amp; Digital Identity
                             </h3>
-                            <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                                Collect your physical card at your provincial registry office or receive dispatch via Post PNG Express. 
-                                The card functions everywhere in Papua New Guinea—including remote districts without internet or mobile reception.
+
+                            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                                Your identity credential is issued in two complementary formats: a tamper-proof physical smart card and a mobile digital wallet pass with offline cryptographic validation.
                             </p>
 
-                            <ul className="mt-4 space-y-2 text-xs text-slate-300 lg:flex lg:flex-col lg:items-end">
-                                <li className="flex items-center gap-2">
-                                    <span>Offline QR code verification with ECDSA digital signature validation</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <span>Accepted by BSP Financial Group, Kina Bank, and Nasfund without paperwork</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <span>Track your application status 24/7 using your reference number</span>
-                                    <CheckCircle2 className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                                </li>
-                            </ul>
+                            <div className="space-y-2.5 pt-1 text-xs">
+                                <div className="rounded-xl border border-line bg-canvas p-3.5 flex items-start gap-3">
+                                    <CreditCard className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                                    <div>
+                                        <strong className="font-semibold text-ink text-sm">Polycarbonate Security Smart Card</strong>
+                                        <p className="text-muted-foreground mt-0.5">
+                                            Laser-engraved with micro-guilloche security patterns, embedded EMV contact chip, and tamper-resistant optical holographic seal.
+                                        </p>
+                                    </div>
+                                </div>
 
-                            <div className="mt-6 flex flex-wrap items-center gap-3 lg:justify-end">
+                                <div className="rounded-xl border border-line bg-canvas p-3.5 flex items-start gap-3">
+                                    <Smartphone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                                    <div>
+                                        <strong className="font-semibold text-ink text-sm">Digital Mobile Wallet Pass</strong>
+                                        <p className="text-muted-foreground mt-0.5">
+                                            Store your verified credentials on your phone. Works even in mountain valleys without cellular reception via offline cryptographic verification.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 flex flex-wrap items-center gap-4">
                                 <Link
                                     href="/track"
-                                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#0052CC] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white shadow transition hover:bg-primary-hover active:scale-[0.98]"
                                 >
-                                    <span>Track Your Application</span>
-                                    <ArrowRight className="size-4" aria-hidden="true" />
+                                    <span>Track Your Application Status</span>
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
+                                <Link
+                                    href="/prereg"
+                                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-surface px-5 py-2.5 text-sm font-semibold text-ink hover:bg-canvas"
+                                >
+                                    <span>Begin Pre-Registration</span>
                                 </Link>
                             </div>
                         </div>
 
-                        {/* Visual Interface Card (Right Side on Desktop) */}
-                        <div className="pl-16 lg:pl-14">
-                            <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0B192C] p-6 shadow-lg">
-                                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex size-7 items-center justify-center rounded-lg bg-[#C9A227] text-black">
-                                            <WifiOff className="size-4" aria-hidden="true" />
-                                        </div>
-                                        <span className="text-xs font-bold text-white">Offline Turnstile &amp; Merchant Scan</span>
-                                    </div>
-                                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 border border-emerald-500/30">
-                                        Offline Ready
-                                    </span>
-                                </div>
-
-                                <div className="mt-4 space-y-3">
-                                    <div className="rounded-xl border border-slate-800 bg-[#071324] p-3.5">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-300">Cryptographic Check (Zero Mobile Data)</span>
-                                            <span className="font-mono text-emerald-400 font-bold">12ms Response</span>
-                                        </div>
-                                        <p className="mt-1 text-[11px] text-slate-400">
-                                            Device reads public key certificate and authenticates national signature locally.
-                                        </p>
-                                    </div>
-
-                                    <div className="rounded-xl border border-slate-800 bg-[#071324] p-3 text-xs">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Truck className="size-4 text-sky-400" aria-hidden="true" />
-                                                <span className="font-medium text-white">Post PNG Express Tracking</span>
-                                            </div>
-                                            <span className="font-mono text-emerald-400 font-semibold">Ready for Collection</span>
-                                        </div>
-                                        <p className="mt-1 text-[11px] font-mono text-slate-400">
-                                            Consignment: PNG-POST-POM-88192
-                                        </p>
-                                    </div>
-                                </div>
+                        {/* Interactive 3D Card Interactive Component */}
+                        <div className="rounded-2xl border border-line bg-canvas p-4 sm:p-6 shadow-sm">
+                            <div className="mb-2 text-center text-xs font-semibold text-muted-foreground">
+                                3D Polycarbonate Smart Card · Interactive Simulation
                             </div>
+                            <SmartCard3D
+                                citizenName="AMINI, KILA PETER"
+                                idNumber="PNG-2026-9042-8810"
+                                dob="14 APR 1994"
+                                province="CENTRAL PROVINCE"
+                                sex="F"
+                                expiryDate="14 APR 2036"
+                            />
                         </div>
                     </div>
-                </div>
-
-                {/* Final Callout Strip */}
-                <div className="mt-20 rounded-2xl border border-slate-800 bg-[#0B192C] p-6 sm:p-8 text-center">
-                    <h3 className="text-xl font-bold text-white sm:text-2xl">
-                        Ready to enroll? Get your National ID underway
-                    </h3>
-                    <p className="mx-auto mt-2 max-w-xl text-xs text-slate-300 sm:text-sm">
-                        Pre-register online to reserve your biometric appointment at any provincial civil registry office.
-                    </p>
-                    <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-                        <Link
-                            href="/prereg"
-                            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#0052CC] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#0047B3] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                        >
-                            <span>Start Pre-Registration Online</span>
-                            <ArrowRight className="size-4" aria-hidden="true" />
-                        </Link>
-                        <Link
-                            href="/track"
-                            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                        >
-                            <span>Check Existing Application</span>
-                        </Link>
-                    </div>
-                </div>
+                )}
             </div>
         </section>
     );

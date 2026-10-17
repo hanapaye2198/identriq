@@ -20,7 +20,7 @@ import {
     ZoomIn,
 } from 'lucide-react';
 import { useState } from 'react';
-import StaffLayout from '@/layouts/staff-layout';
+import StaffLayout, { StaffStats } from '@/layouts/staff-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,7 +66,15 @@ function formatDocType(type: string): string {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function Capture({ appointment }: { appointment: Appointment }) {
+export default function Capture({
+    appointment,
+    centers = [],
+    stats,
+}: {
+    appointment: Appointment;
+    centers?: { id: number; name: string }[];
+    stats?: StaffStats;
+}) {
     const [photo, setPhoto] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [fp, setFp] = useState('FP-PNG-AUTO-CAPTURE');
@@ -132,7 +140,7 @@ export default function Capture({ appointment }: { appointment: Appointment }) {
         'Citizen Applicant';
 
     return (
-        <StaffLayout currentCenterName={appointment.center.name}>
+        <StaffLayout currentCenterName={appointment.center.name} centers={centers} stats={stats}>
             <Head title={`Live Capture · ${applicantName} · Staff Station`} />
 
             <div className="p-6 sm:p-8">

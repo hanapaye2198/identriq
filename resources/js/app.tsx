@@ -9,7 +9,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { store } from '@/lib/store';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'IDENTRIQ';
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

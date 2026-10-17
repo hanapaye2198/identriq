@@ -1,16 +1,20 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     ChevronLeft,
     ChevronRight,
     ExternalLink,
     MapPin,
-    QrCode,
     Settings,
     ShieldCheck,
+    UserCheck,
     Users,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface StaffStats {
     today_count: number;
@@ -19,27 +23,84 @@ export interface StaffStats {
     total_active: number;
 }
 
+interface WalkinCenter {
+    id: number;
+    name: string;
+}
+
 interface StaffLayoutProps {
     children: React.ReactNode;
-    title?: string;
     stats?: StaffStats;
     currentCenterName?: string;
-    onOpenWalkin?: () => void;
+    centers?: WalkinCenter[];
 }
 
 export default function StaffLayout({
     children,
     stats = { today_count: 0, checked_in_count: 0, rework_count: 0, total_active: 0 },
     currentCenterName = 'Waigani Registration Center',
-    onOpenWalkin,
+    centers = [],
 }: StaffLayoutProps) {
     const { url } = usePage();
     const [collapsed, setCollapsed] = useState(false);
 
-    const isQueue = url.startsWith('/staff') && !url.startsWith('/staff/rework') && !url.startsWith('/staff/setup') && !url.startsWith('/staff/capture');
-    const isRework = url.startsWith('/staff/rework');
-    const isSetup = url.startsWith('/staff/setup');
+    // Walk-in intake lives in the layout so the action is identical on every staff page.
+    const [showWalkin, setShowWalkin] = useState(false);
+    const [wName, setWName] = useState('');
+    const [wMobile, setWMobile] = useState('+675');
+    const [wCenter, setWCenter] = useState(centers[0]?.id ?? 1);
+    const [walkinError, setWalkinError] = useState<string | null>(null);
+
+    const isQueue = url.startsWith('/staff') && !url.startsWith('/staff/setup');
     const isCapture = url.startsWith('/staff/capture');
+    const isSetup = url.startsWith('/staff/setup');
+
+    function openWalkin() {
+        const preferred = centers.find((c) => c.name === currentCenterName) ?? centers[0];
+        setWCenter(preferred?.id ?? 1);
+        setWalkinError(null);
+        setShowWalkin(true);
+    }
+
+    function submitWalkin(e: React.FormEvent) {
+        e.preventDefault();
+        setWalkinError(null);
+
+        // Normalize mobile
+        let mobile = wMobile.trim();
+        if (!mobile.startsWith('+675') && /^\d{7}$/.test(mobile)) {
+            mobile = '+675' + mobile;
+        }
+
+        if (!wName.trim()) {
+            setWalkinError('Please enter applicant full name.');
+            return;
+        }
+        if (!/^\+675\d{7}$/.test(mobile)) {
+            setWalkinError('Mobile must be in PNG format (+675 followed by 7 digits, e.g. +6757123456).');
+            return;
+        }
+
+        router.post(
+            '/staff/walkin',
+            {
+                full_name: wName.trim(),
+                mobile: mobile,
+                center_id: wCenter,
+            },
+            {
+                onError: (errors) => {
+                    const first = Object.values(errors)[0];
+                    setWalkinError(typeof first === 'string' ? first : 'Walk-in registration failed.');
+                },
+                onSuccess: () => {
+                    setShowWalkin(false);
+                    setWName('');
+                    setWMobile('+675');
+                },
+            }
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-[#F4F6F9] text-[#0F2644]">
@@ -96,58 +157,50 @@ export default function StaffLayout({
                     <Link
                         href="/staff"
                         className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                            isQueue && !isRework
+                            isQueue
                                 ? 'bg-[#0052CC] text-white shadow-xs'
                                 : 'text-slate-700 hover:bg-slate-100 hover:text-[#0052CC]'
                         }`}
                         title="Live Enrolment Queue"
                     >
                         <div className="flex items-center gap-3">
-                            <Users className={`size-4.5 shrink-0 ${isQueue && !isRework ? 'text-white' : 'text-slate-500 group-hover:text-[#0052CC]'}`} />
+                            <Users className={`size-4.5 shrink-0 ${isQueue ? 'text-white' : 'text-slate-500 group-hover:text-[#0052CC]'}`} />
                             {!collapsed && <span>Live Queue</span>}
                         </div>
-                        {!collapsed && stats.today_count > 0 && (
-                            <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                                    isQueue && !isRework ? 'bg-white/20 text-white' : 'bg-blue-50 text-[#0052CC]'
-                                }`}
-                            >
-                                {stats.today_count}
+                        {!collapsed && (stats.today_count > 0 || stats.rework_count > 0) && (
+                            <span className="flex items-center gap-1">
+                                {stats.rework_count > 0 && (
+                                    <span
+                                        className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                                            isQueue ? 'bg-amber-400/25 text-amber-50' : 'bg-amber-100 text-amber-800'
+                                        }`}
+                                        title={`${stats.rework_count} flagged for rework`}
+                                    >
+                                        <AlertTriangle className="size-3" />
+                                        {stats.rework_count}
+                                    </span>
+                                )}
+                                {stats.today_count > 0 && (
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                                            isQueue ? 'bg-white/20 text-white' : 'bg-blue-50 text-[#0052CC]'
+                                        }`}
+                                    >
+                                        {stats.today_count}
+                                    </span>
+                                )}
                             </span>
                         )}
                     </Link>
 
-                    <Link
-                        href="/staff/rework"
-                        className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                            isRework
-                                ? 'bg-amber-600 text-white shadow-xs'
-                                : 'text-slate-700 hover:bg-slate-100 hover:text-amber-700'
-                        }`}
-                        title="Rework Queue"
-                    >
-                        <div className="flex items-center gap-3">
-                            <AlertTriangle className={`size-4.5 shrink-0 ${isRework ? 'text-white' : 'text-slate-500 group-hover:text-amber-600'}`} />
-                            {!collapsed && <span>Rework Desk</span>}
-                        </div>
-                        {!collapsed && stats.rework_count > 0 && (
-                            <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                                    isRework ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
-                                }`}
-                            >
-                                {stats.rework_count}
+                    {/* Live Capture is a sub-state of the queue — not a separate destination. */}
+                    {isCapture && !collapsed && (
+                        <div className="ml-5 flex items-center gap-2 border-l-2 border-[#0052CC]/25 py-1.5 pl-3 text-xs font-semibold text-[#0052CC]">
+                            <span className="relative flex size-2">
+                                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#0052CC] opacity-60" />
+                                <span className="relative inline-flex size-2 rounded-full bg-[#0052CC]" />
                             </span>
-                        )}
-                    </Link>
-
-                    {isCapture && (
-                        <div
-                            className="flex items-center gap-3 rounded-xl bg-blue-50 px-3 py-2.5 text-sm font-semibold text-[#0052CC]"
-                            title="Active Capture Session"
-                        >
-                            <QrCode className="size-4.5 shrink-0 text-[#0052CC]" />
-                            {!collapsed && <span>Live Capture</span>}
+                            <span>Capture in progress…</span>
                         </div>
                     )}
 
@@ -174,12 +227,12 @@ export default function StaffLayout({
                     </Link>
                 </nav>
 
-                {/* Walk-in Call to Action in Sidebar */}
-                {onOpenWalkin && !collapsed && (
+                {/* Walk-in Citizen — always available while a desk counter is selected */}
+                {centers.length > 0 && !collapsed && (
                     <div className="p-3">
                         <button
                             type="button"
-                            onClick={onOpenWalkin}
+                            onClick={openWalkin}
                             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0052CC] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0047B3] active:scale-[0.99]"
                         >
                             <span>+ Walk-in Citizen</span>
@@ -217,6 +270,97 @@ export default function StaffLayout({
             <main className="flex-1 overflow-y-auto">
                 {children}
             </main>
+
+            {/* Walk-in Citizen Modal — owned by the layout, available on every staff page */}
+            {showWalkin && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+                    <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-[#0F2644]">Walk-In Citizen Intake</h3>
+                                <p className="text-xs text-slate-500">Register an unscheduled citizen at this desk counter.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowWalkin(false)}
+                                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                            >
+                                <X className="size-4.5" />
+                            </button>
+                        </div>
+
+                        {walkinError && (
+                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
+                                {walkinError}
+                            </div>
+                        )}
+
+                        <form onSubmit={submitWalkin} className="mt-4 space-y-4">
+                            <div>
+                                <Label className="text-xs font-semibold text-[#0F2644]">Citizen Full Name</Label>
+                                <Input
+                                    value={wName}
+                                    onChange={(e) => setWName(e.target.value)}
+                                    placeholder="e.g. John Kila"
+                                    className="mt-1 h-11 border-slate-300 font-medium text-sm"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-semibold text-[#0F2644]">
+                                    Mobile Number <span className="text-slate-400">(PNG 7-digit)</span>
+                                </Label>
+                                <div className="mt-1 flex items-center gap-2">
+                                    <Input
+                                        value={wMobile}
+                                        onChange={(e) => setWMobile(e.target.value)}
+                                        placeholder="+6757123456"
+                                        className="h-11 border-slate-300 font-mono text-sm"
+                                        required
+                                    />
+                                </div>
+                                <p className="mt-1 text-[11px] text-slate-500">
+                                    Format: +675 followed by 7 digits (e.g., +6757123456).
+                                </p>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-semibold text-[#0F2644]">Desk Counter Center</Label>
+                                <select
+                                    value={wCenter}
+                                    onChange={(e) => setWCenter(Number(e.target.value))}
+                                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-[#0F2644]"
+                                >
+                                    {centers.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-3">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setShowWalkin(false)}
+                                    className="h-11 border-slate-300 font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    className="h-11 gap-2 rounded-xl bg-[#0052CC] px-6 font-semibold text-white shadow-xs hover:bg-[#0047B3]"
+                                >
+                                    <UserCheck className="size-4" />
+                                    <span>Check In &amp; Proceed →</span>
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

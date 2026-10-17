@@ -24,7 +24,7 @@ export default function Centers({ centers }: { centers: Center[] }) {
                                 <p className="mt-1 text-sm text-[#14201B]/70">Capacity: {c.daily_capacity}/day</p>
                                 <Link
                                     href={`/prereg/8?center=${c.id}`}
-                                    className="mt-3 inline-block rounded-full bg-[#2FD6A3] px-4 py-2 text-sm font-semibold text-[#0E2A26]"
+                                    className="mt-3 inline-block rounded-xl bg-[#0052CC] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0047B3]"
                                 >
                                     Book here
                                 </Link>

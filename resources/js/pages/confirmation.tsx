@@ -51,14 +51,14 @@ export default function Confirmation({
                             <div
                                 key={t}
                                 title={t}
-                                className="h-2 flex-1 rounded-full bg-[#2FD6A3] transition-colors duration-300"
+                                className="h-2 flex-1 rounded-full bg-[#0052CC] transition-colors duration-300"
                             />
                         ))}
                     </div>
 
-                    <div className="mt-2.5 mb-6 flex items-center justify-between text-xs text-[#14201B]/60 sm:text-sm">
+                    <div className="mt-2.5 mb-6 flex items-center justify-between text-xs text-slate-500 sm:text-sm">
                         <p className="font-medium">
-                            Step 10 of 10 · <span className="font-semibold text-[#0E2A26]">Confirmation</span>
+                            Step 10 of 10 · <span className="font-semibold text-[#0F2644]">Confirmation</span>
                         </p>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
                             <span className="size-1.5 rounded-full bg-emerald-600"></span> Completed

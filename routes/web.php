@@ -27,7 +27,7 @@ Route::post('/prereg/confirm', [PreregController::class, 'confirm'])->name('prer
 Route::post('/prereg/book', [PreregController::class, 'book'])->name('prereg.book');
 
 Route::get('/track', [TrackController::class, 'index'])->name('track');
-Route::post('/track/lookup', [TrackController::class, 'lookup'])->name('track.lookup');
+Route::match(['get', 'post'], '/track/lookup', [TrackController::class, 'lookup'])->name('track.lookup');
 
 Route::inertia('/m', 'm/link')->name('m.link');
 Route::inertia('/m/wallet', 'm/wallet')->name('m.wallet');

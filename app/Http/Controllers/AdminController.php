@@ -14,6 +14,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
+    /** @return array<string, int> */
+    private function getStats(): array
+    {
+        return [
+            'validating_count' => Registrant::whereIn('status', ['validating', 'rework'])->count(),
+            'approved_count' => Identity::where('status', 'approved')->whereNull('card_personalized_at')->count(),
+            'issued_count' => Identity::whereNotNull('card_personalized_at')->whereNull('delivered_at')->count(),
+            'centers_count' => RegistrationCenter::where('is_active', true)->count(),
+            'events_count' => AuthEvent::count(),
+        ];
+    }
+
     public function queue(): Response
     {
         return Inertia::render('admin/validation', [
@@ -21,6 +33,7 @@ class AdminController extends Controller
                 ->whereIn('status', ['validating', 'rework'])
                 ->orderBy('updated_at')
                 ->get(),
+            'stats' => $this->getStats(),
         ]);
     }
 
@@ -33,6 +46,7 @@ class AdminController extends Controller
                 ->get(),
             'active' => $registrant->load('demographic', 'documents', 'identity', 'appointments.center'),
             'matches' => $this->candidates($registrant),
+            'stats' => $this->getStats(),
         ]);
     }
 
@@ -87,8 +101,12 @@ class AdminController extends Controller
     public function advance(): RedirectResponse
     {
         $advanced = 0;
+        foreach (Registrant::where('status', 'validating')->get() as $reg) {
+            Identity::firstOrCreate(['registrant_id' => $reg->id], ['status' => 'pending']);
+        }
+
         foreach (Identity::where('status', 'pending')->with('registrant.demographic')->get() as $identity) {
-            if (empty($this->candidates($identity->registrant))) {
+            if ($identity->registrant && empty($this->candidates($identity->registrant))) {
                 $identity->update(['status' => 'approved']);
                 $identity->registrant->update(['status' => 'approved']);
                 $advanced++;
@@ -103,6 +121,7 @@ class AdminController extends Controller
         return Inertia::render('admin/issuance', [
             'identities' => Identity::with('registrant.demographic')
                 ->where('status', 'approved')->orderBy('updated_at')->get(),
+            'stats' => $this->getStats(),
         ]);
     }
 
@@ -131,7 +150,8 @@ class AdminController extends Controller
     public function master(): Response
     {
         return Inertia::render('admin/master', [
-            'centers' => RegistrationCenter::all(),
+            'centers' => RegistrationCenter::orderBy('id')->get(),
+            'stats' => $this->getStats(),
         ]);
     }
 
@@ -172,6 +192,7 @@ class AdminController extends Controller
         return Inertia::render('admin/audit', [
             'events' => AuthEvent::with('identity.registrant.demographic')->latest()->limit(50)->get(),
             'funnel' => $funnel,
+            'stats' => $this->getStats(),
         ]);
     }
 

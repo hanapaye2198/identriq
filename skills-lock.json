@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "anti-slop": {
+      "source": "rand/cc-polymath",
+      "sourceType": "github",
+      "skillPath": "skills/anti-slop/SKILL.md",
+      "computedHash": "76efa981799d4d9454aef081ae02fd21cc38f56450d0d8bd33c5f50221f53543"
+    },
     "code-review": {
       "source": "o0o0o0admin/skills-repo_supercent-io-skills-template",
       "sourceType": "github",

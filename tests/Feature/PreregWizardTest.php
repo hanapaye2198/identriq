@@ -72,6 +72,8 @@ test('track lookup finds booking by qr token', function () {
     $token = Appointment::first()->qr_token;
 
     $this->post(route('track.lookup'), ['qr_token' => $token])->assertOk();
+    $this->get(route('track.lookup', ['qr_token' => $token]))->assertOk();
+    $this->get(route('track.lookup'))->assertRedirect(route('track'));
     $this->post(route('track.lookup'), ['qr_token' => 'nope'])->assertNotFound();
 });
 

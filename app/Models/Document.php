@@ -22,6 +22,25 @@ class Document extends Model
         'verified_note',
     ];
 
+    protected $appends = ['file_url'];
+
+    public function getFileUrlAttribute(): ?string
+    {
+        if (empty($this->path)) {
+            return null;
+        }
+
+        if (str_starts_with($this->path, 'http://') || str_starts_with($this->path, 'https://')) {
+            return $this->path;
+        }
+
+        if (str_starts_with($this->path, '/storage/')) {
+            return $this->path;
+        }
+
+        return '/storage/'.ltrim($this->path, '/');
+    }
+
     /** @return BelongsTo<Registrant, $this> */
     public function registrant(): BelongsTo
     {

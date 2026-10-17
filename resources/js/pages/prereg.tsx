@@ -109,7 +109,7 @@ function Shell({ step, children }: { step: number; children: React.ReactNode }) 
                             key={t}
                             title={`${i + 1}. ${t}`}
                             className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
-                                i + 1 <= step ? 'bg-[#2FD6A3]' : 'bg-[#14201B]/15'
+                                i + 1 <= step ? 'bg-[#0052CC]' : 'bg-[#14201B]/15'
                             }`}
                         />
                     ))}
@@ -117,7 +117,7 @@ function Shell({ step, children }: { step: number; children: React.ReactNode }) 
 
                 <div className="mt-2.5 flex items-center justify-between text-xs text-[#14201B]/60 sm:text-sm">
                     <p className="font-medium">
-                        Step {step} of 10 · <span className="font-semibold text-[#0E2A26]">{TITLES[step - 1]}</span>
+                        Step {step} of 10 · <span className="font-semibold text-[#0F2644]">{TITLES[step - 1]}</span>
                     </p>
                     <span className="tabular-nums font-medium">{Math.round((step / 10) * 100)}% complete</span>
                 </div>

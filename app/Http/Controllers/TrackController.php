@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Registrant;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,19 +16,34 @@ class TrackController extends Controller
         return Inertia::render('track');
     }
 
-    public function lookup(Request $request): Response
+    public function lookup(Request $request): Response|RedirectResponse
     {
         $data = $request->validate([
             'mobile' => 'nullable|string',
             'qr_token' => 'nullable|string',
         ]);
 
+        if (empty($data['mobile']) && empty($data['qr_token'])) {
+            return redirect()->route('track');
+        }
+
         $registrant = null;
         if (! empty($data['qr_token'])) {
-            $appointment = Appointment::where('qr_token', $data['qr_token'])->first();
+            $token = trim($data['qr_token']);
+            $appointment = Appointment::where('qr_token', $token)->first();
             $registrant = $appointment?->registrant;
+            if (! $registrant) {
+                $registrant = Registrant::whereHas('identity', fn ($q) => $q->where('biosure_id_number', $token))
+                    ->orWhere('id', is_numeric($token) ? (int) $token : 0)
+                    ->first();
+            }
         } elseif (! empty($data['mobile'])) {
-            $registrant = Registrant::where('mobile', $data['mobile'])->first();
+            $input = trim($data['mobile']);
+            $clean = preg_replace('/[^\d+]/', '', $input);
+            $registrant = Registrant::where('mobile', $input)
+                ->orWhere('mobile', preg_replace('/\s+/', '', $input))
+                ->orWhere('mobile', $clean)
+                ->first();
         }
         abort_if(! $registrant, 404, 'No registration found.');
 

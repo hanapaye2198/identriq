@@ -11,7 +11,7 @@ export interface MapPoint {
 function dot(active: boolean, L: { divIcon: (o: object) => DivIcon }): DivIcon {
     return L.divIcon({
         className: '',
-        html: `<span style="display:block;width:20px;height:20px;border-radius:9999px;background:${active ? '#C9A227' : '#2FD6A3'};border:3px solid #0E2A26;box-shadow:0 1px 4px rgba(0,0,0,.35);"></span>`,
+        html: `<span style="display:block;width:20px;height:20px;border-radius:9999px;background:${active ? '#C9A227' : '#0052CC'};border:3px solid #0B192C;box-shadow:0 1px 4px rgba(0,0,0,.35);"></span>`,
         iconSize: [20, 20],
         iconAnchor: [10, 10],
     });

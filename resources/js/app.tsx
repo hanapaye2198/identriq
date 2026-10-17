@@ -14,16 +14,15 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
-        const publicPages = ['welcome', 'centers', 'prereg', 'confirmation', 'track', 'verify/offline', 'verify/online', 'm/link', 'm/wallet', 'm/verifier'];
         switch (true) {
-            case publicPages.includes(name):
-                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
-            default:
+            case name === 'dashboard':
                 return AppLayout;
+            default:
+                return null;
         }
     },
     strictMode: true,

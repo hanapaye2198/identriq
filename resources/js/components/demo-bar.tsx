@@ -55,7 +55,7 @@ export default function DemoBar() {
                         }}
                         className={`rounded-full px-2 py-0.5 capitalize ${
                             role === r
-                                ? 'bg-[#2FD6A3] text-[#0E2A26]'
+                                ? 'bg-[#0052CC] text-white font-semibold'
                                 : 'text-white/60 hover:text-white'
                         }`}
                     >

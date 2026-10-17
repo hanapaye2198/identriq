@@ -115,6 +115,27 @@ class StaffController extends Controller
             'status' => 'checked-in',
         ]);
 
+        if ($registrant->documents()->count() === 0) {
+            $registrant->documents()->createMany([
+                [
+                    'category' => 'identity',
+                    'doc_type' => 'national_id',
+                    'ref_number' => 'WALKIN-PRESENTED',
+                    'path' => '',
+                    'mime' => 'image/png',
+                    'verified_status' => 'pending',
+                ],
+                [
+                    'category' => 'address',
+                    'doc_type' => 'ward_councillor_letter',
+                    'ref_number' => 'WALKIN-PRESENTED',
+                    'path' => '',
+                    'mime' => 'image/png',
+                    'verified_status' => 'pending',
+                ],
+            ]);
+        }
+
         return redirect()->route('staff.capture', $appointment);
     }
 
@@ -134,6 +155,8 @@ class StaffController extends Controller
             'documents' => 'nullable|array',
             'documents.*.status' => 'in:accepted,rejected',
             'documents.*.note' => 'nullable|string|max:500',
+            'document_files' => 'nullable|array',
+            'document_files.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
             'attest' => 'required|accepted',
         ]);
 
@@ -149,10 +172,17 @@ class StaffController extends Controller
             if (! $document) {
                 continue;
             }
-            $document->update([
+            $updateData = [
                 'verified_status' => $doc['status'],
                 'verified_note' => $doc['note'] ?? null,
-            ]);
+            ];
+            if ($request->hasFile("document_files.{$id}")) {
+                $path = $request->file("document_files.{$id}")->store('capture/docs', 'public');
+                $updateData['path'] = $path;
+                $updateData['mime'] = $request->file("document_files.{$id}")->getClientMimeType();
+                $updateData['size'] = $request->file("document_files.{$id}")->getSize();
+            }
+            $document->update($updateData);
             if ($doc['status'] === 'rejected') {
                 $rejected++;
             }
